@@ -18,13 +18,16 @@ function roadmapPracticalsMarkup(lessonId) {
       <div class="roadmap-practical-list">
         ${practicals
           .map(
-            (practical, index) => `
-          <article class="roadmap-practical-card">
+            (practical, index) => {
+              const practicalId = `${lessonId}:${index}`
+              return `
+          <article class="roadmap-practical-card" data-practical-card="${practicalId}">
             <div><span>Practical ${index + 1}</span><h4>${practical.title}</h4></div>
             <p>${practical.prompt}</p>
-            <pre><code>${highlightCode(practical.code)}</code></pre>
+            <button class="roadmap-practical-start" type="button" data-practical-start="${practicalId}">Try this practical</button>
           </article>
-        `,
+        `
+            },
           )
           .join("")}
       </div>

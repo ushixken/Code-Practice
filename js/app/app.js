@@ -1160,6 +1160,7 @@ let roadmapSolved = new Set()
 let currentRoadmapIdx = 0
 let roadmapRanOnce = false
 let roadmapFunctionWrapperHidden = false
+let activeRoadmapPractical = null
 
 const roadmapView = document.getElementById("roadmapView")
 const roadmapNodesEl = document.getElementById("roadmapNodes")
@@ -1249,6 +1250,7 @@ function learningSupportFor(lesson) {
 function loadRoadmapLesson(idx) {
   currentRoadmapIdx = idx
   roadmapRanOnce = false
+  activeRoadmapPractical = null
   const lesson = ROADMAP[idx]
   const isDone = roadmapSolved.has(lesson.id)
   const firstFunctionsLesson = ROADMAP.findIndex(
@@ -1325,6 +1327,7 @@ function loadRoadmapLesson(idx) {
           Run
         </button>
         <button class="reset-btn" id="roadmapResetBtn">Reset</button>
+        <button class="roadmap-try-another-btn" id="roadmapTryAnotherBtn" type="button" hidden>Try another</button>
         <button class="roadmap-next-btn" id="roadmapNextBtn" type="button" ${isDone ? "" : "disabled"}>Next</button>
         <button class="roadmap-skip-btn" id="roadmapSkipBtn">Already know this — mark as mastered</button>
       </div>
@@ -1357,6 +1360,7 @@ function loadRoadmapLesson(idx) {
   })
 
   const roadmapCodeInputEl = document.getElementById("roadmapCodeInput")
+  bindRoadmapPracticalActions()
   const hintsEl = document.getElementById("roadmapHints")
   const hintBtn = document.getElementById("roadmapHintBtn")
   const hintProgress = document.getElementById("roadmapHintProgress")
@@ -1395,13 +1399,18 @@ function loadRoadmapLesson(idx) {
   if (wrapperToggle)
     wrapperToggle.addEventListener("click", toggleRoadmapFunctionWrapper)
   document.getElementById("roadmapResetBtn").addEventListener("click", () => {
-    roadmapCodeInputEl.value = roadmapFunctionWrapperHidden
-      ? unwrapRoadmapFunction(lesson.starter)
-      : lesson.starter
+    roadmapCodeInputEl.value = activeRoadmapPractical
+      ? `// ${activeRoadmapPractical.practical.prompt}\n\n`
+      : roadmapFunctionWrapperHidden
+        ? unwrapRoadmapFunction(lesson.starter)
+        : lesson.starter
     updateRoadmapGutter()
     refreshRoadmapHighlight()
     roadmapRanOnce = false
     roadmapCodeInputEl.focus()
+  })
+  document.getElementById("roadmapTryAnotherBtn").addEventListener("click", () => {
+    startRoadmapPractical(activeRoadmapPractical?.lessonId, activeRoadmapPractical?.index + 1)
   })
   document.getElementById("roadmapNextBtn").addEventListener("click", () => {
     if (!roadmapSolved.has(lesson.id)) return
@@ -1683,12 +1692,54 @@ function showRoadmapPracticals(lessonId) {
   const practicalMarkup = roadmapPracticalsMarkup(lessonId)
   if (editorWrap && practicalMarkup)
     editorWrap.insertAdjacentHTML("beforebegin", practicalMarkup)
+  bindRoadmapPracticalActions()
+}
+
+function bindRoadmapPracticalActions() {
+  roadmapDetailEl
+    .querySelectorAll("[data-practical-start]")
+    .forEach((button) => {
+      if (button.dataset.bound) return
+      button.dataset.bound = "true"
+      button.addEventListener("click", () => {
+        const [lessonId, index] = button.dataset.practicalStart.split(":")
+        startRoadmapPractical(lessonId, Number(index))
+      })
+    })
+}
+
+function startRoadmapPractical(lessonId, index = 0) {
+  const practicals = roadmapPracticalsFor(lessonId)
+  if (!practicals.length) return
+  const nextIndex = index >= practicals.length ? 0 : index
+  const practical = practicals[nextIndex]
+  activeRoadmapPractical = { lessonId, index: nextIndex, practical }
+  const practiceSection = roadmapDetailEl.querySelector(".roadmap-practice")
+  if (practiceSection) practiceSection.hidden = true
+  roadmapDetailEl.querySelectorAll("[data-practical-card]").forEach((card) => {
+    card.classList.toggle("is-active", card.dataset.practicalCard === `${lessonId}:${nextIndex}`)
+  })
+  const editor = document.getElementById("roadmapCodeInput")
+  if (editor) {
+    editor.value = `// ${practical.prompt}\n\n`
+    updateRoadmapGutter()
+    refreshRoadmapHighlight()
+    editor.focus()
+  }
+  const nextButton = document.getElementById("roadmapTryAnotherBtn")
+  if (nextButton) nextButton.hidden = false
+  const terminal = document.getElementById("roadmapTerminal")
+  if (terminal) terminal.innerHTML = '<div class="term-line term-dim">Write your own solution, then hit Run to see its console output.</div>'
 }
 
 async function runRoadmapCode() {
   roadmapRanOnce = true
   const lesson = ROADMAP[currentRoadmapIdx]
   const visibleCode = document.getElementById("roadmapCodeInput").value
+  if (activeRoadmapPractical) {
+    runActiveRoadmapPractical(visibleCode)
+    return
+  }
   const code = isRoadmapFunctionWrapped(visibleCode, lesson)
     ? visibleCode
     : wrapRoadmapFunction(visibleCode, lesson)
@@ -1791,6 +1842,36 @@ async function runRoadmapCode() {
       `${passCount}/${lesson.tests.length} checks passed. Keep going.`,
       "term-info",
     )
+  }
+}
+
+function runActiveRoadmapPractical(code) {
+  const terminal = document.getElementById("roadmapTerminal")
+  terminal.innerHTML = ""
+  const output = []
+  const originalLog = console.log
+  console.log = (...values) => output.push(values.join(" "))
+  try {
+    new Function(code)()
+    if (output.length) {
+      terminal.innerHTML = '<div class="term-line term-info">Console output:</div>'
+      output.forEach((line) => {
+        const result = document.createElement("div")
+        result.className = "term-line term-pass"
+        result.textContent = "  " + line
+        terminal.appendChild(result)
+      })
+    } else {
+      terminal.innerHTML = '<div class="term-line term-dim">Your code ran. Add console.log(...) if you want to inspect a result here.</div>'
+    }
+  } catch (error) {
+    terminal.innerHTML = '<div class="term-line term-fail">✗ Your practical code failed to run:</div>'
+    const result = document.createElement("div")
+    result.className = "term-line term-fail"
+    result.textContent = "  " + error.message
+    terminal.appendChild(result)
+  } finally {
+    console.log = originalLog
   }
 }
 

@@ -965,14 +965,19 @@ body {
   font-size: 12px;
   line-height: 1.5;
 }
-.roadmap-practical-card pre {
-  margin: 0;
-  padding: 9px 10px;
-  overflow-x: auto;
+.roadmap-practical-start,
+.roadmap-try-another-btn {
+  border: 1px solid var(--accent-dim);
   border-radius: 5px;
-  background: var(--bg-0);
-  color: var(--text-1);
-  font: 12px/1.6 var(--mono);
+  padding: 6px 10px;
+  background: rgba(139, 196, 114, 0.08);
+  color: var(--accent);
+  font: 11px var(--mono);
+  cursor: pointer;
+}
+.roadmap-practical-card.is-active {
+  border-color: var(--accent-dim);
+  background: rgba(139, 196, 114, 0.08);
 }
 
 /* ===== Right panel: problem description ===== */

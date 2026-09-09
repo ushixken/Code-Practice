@@ -282,10 +282,28 @@ const ROADMAP = [
       <div class="example"><b>const name = "Ada";<br>name = "Bob"; // ❌ TypeError</b></div>
     `,
     fnName: 'declareAge',
-    starter: 'function declareAge() {\n  // Declare a variable named age using `let`,\n  // set it to 25, then return it.\n\n}',
-    task: 'Declare a variable called <code>age</code> with <code>let</code>, assign it <code>25</code>, and return it.',
-    testMode: 'io',
-    tests: [[[], 25]]
+    starter: 'function declareAge() {\n  // Create a variable named age using let,\n  // set it to 25, then print it.\n\n}',
+    solution: 'function declareAge() {\n  let age = 25;\n  console.log(age);\n}',
+    task: 'Declare a variable called <code>age</code> with <code>let</code>, assign it <code>25</code>, then print it with <code>console.log(age)</code>.',
+    hints: [
+      'Use let because this lesson is practicing a variable that can change later.',
+      'Create it with: let age = 25;',
+      'On the next line, use console.log(age); to print its value.'
+    ],
+    reflection: 'What does the name age help you remember about the value 25?',
+    testMode: 'custom',
+    validate: async (fn) => {
+      const output = [];
+      const originalLog = console.log;
+      console.log = (...values) => output.push(values.join(' '));
+      try { fn(); } finally { console.log = originalLog; }
+      const ok = output.includes('25');
+      return {
+        ok,
+        consoleOutput: output,
+        lines: [`${ok ? '✓' : '✗'} Lesson check: print the value 25 with console.log(age).`]
+      };
+    }
   },
   {
     id: 'dataTypes', level: 'easy', title: 'Data Types',
@@ -296,10 +314,18 @@ const ROADMAP = [
       <p>Arrays are actually a special kind of object, so <code>typeof [1,2]</code> is <code>'object'</code> too — that's a classic gotcha.</p>
     `,
     fnName: 'describeType',
-    starter: "function describeType(value) {\n  // Return \"string\", \"number\", or \"boolean\"\n  // depending on the type of `value`.\n\n}",
-    task: "Return <code>'string'</code>, <code>'number'</code>, or <code>'boolean'</code> depending on the type of the argument, using <code>typeof</code>.",
-    testMode: 'io',
-    tests: [[['hi'], 'string'], [[42], 'number'], [[true], 'boolean'], [[''], 'string']]
+    starter: "function describeType() {\n  // Create a variable named answer with the value 42,\n  // then print its type with typeof.\n\n}",
+    solution: "function describeType() {\n  const answer = 42;\n  console.log(typeof answer);\n}",
+    task: 'Create <code>const answer = 42</code>, then use <code>console.log(typeof answer)</code> to print its type.',
+    testMode: 'custom',
+    validate: async (fn) => {
+      const output = [];
+      const originalLog = console.log;
+      console.log = (...values) => output.push(values.join(' '));
+      try { fn(); } finally { console.log = originalLog; }
+      const ok = output.includes('number');
+      return { ok, consoleOutput: output, lines: [`${ok ? '✓' : '✗'} Lesson check: typeof answer should print "number".`] };
+    }
   },
   {
     id: 'operators', level: 'easy', title: 'Operators',
@@ -311,10 +337,18 @@ const ROADMAP = [
       <div class="example"><b>5 === "5"</b> → false (strict, no conversion)</div>
     `,
     fnName: 'isAdult',
-    starter: 'function isAdult(age) {\n  // Return true if age is 18 or over.\n\n}',
-    task: 'Return <code>true</code> if <code>age</code> is 18 or greater, using a comparison operator.',
-    testMode: 'io',
-    tests: [[[18], true], [[17], false], [[30], true], [[0], false]]
+    starter: 'function isAdult() {\n  // Compare 21 with 18, then print the result.\n\n}',
+    solution: 'function isAdult() {\n  console.log(21 >= 18);\n}',
+    task: 'Use <code>console.log(21 >= 18)</code> to print the result of a comparison.',
+    testMode: 'custom',
+    validate: async (fn) => {
+      const output = [];
+      const originalLog = console.log;
+      console.log = (...values) => output.push(values.join(' '));
+      try { fn(); } finally { console.log = originalLog; }
+      const ok = output.includes('true');
+      return { ok, consoleOutput: output, lines: [`${ok ? '✓' : '✗'} Lesson check: the comparison should print true.`] };
+    }
   },
   {
     id: 'conditionals', level: 'easy', title: 'Conditionals (if / else)',
@@ -324,10 +358,18 @@ const ROADMAP = [
       <div class="example"><b>if (x > 10) { ... } else if (x > 5) { ... } else { ... }</b></div>
     `,
     fnName: 'trafficAction',
-    starter: "function trafficAction(light) {\n  // \"red\" -> \"stop\"\n  // \"yellow\" -> \"slow down\"\n  // \"green\" -> \"go\"\n\n}",
-    task: "Given a traffic light color, return <code>'stop'</code> for red, <code>'slow down'</code> for yellow, and <code>'go'</code> for green.",
-    testMode: 'io',
-    tests: [[['red'], 'stop'], [['yellow'], 'slow down'], [['green'], 'go']]
+    starter: "function trafficAction() {\n  // Create light with the value \"green\".\n  // If it is green, print \"go\".\n\n}",
+    solution: "function trafficAction() {\n  const light = \"green\";\n  if (light === \"green\") {\n    console.log(\"go\");\n  }\n}",
+    task: 'Create <code>const light = "green"</code>. Use an <code>if</code> statement to print <code>"go"</code> when the light is green.',
+    testMode: 'custom',
+    validate: async (fn) => {
+      const output = [];
+      const originalLog = console.log;
+      console.log = (...values) => output.push(values.join(' '));
+      try { fn(); } finally { console.log = originalLog; }
+      const ok = output.includes('go');
+      return { ok, consoleOutput: output, lines: [`${ok ? '✓' : '✗'} Lesson check: the green light should print "go".`] };
+    }
   },
   {
     id: 'functions', level: 'medium', title: 'Functions',
@@ -335,13 +377,30 @@ const ROADMAP = [
     content: `
       <p>A function packages up reusable logic. It takes <b>parameters</b> as input and can send a value back with <code>return</code> — once <code>return</code> runs, the function stops immediately.</p>
       <div class="example"><b>function add(a, b) { return a + b; }</b></div>
-      <p>Arrow functions are a shorter way to write the same thing: <code>const add = (a, b) => a + b;</code></p>
+      <p>Call a function with parentheses, such as <code>add(2, 3)</code>. You will meet shorter function syntax later, after this form feels comfortable.</p>
     `,
     fnName: 'greet',
     starter: "function greet(name) {\n  // Return \"Hello, <name>!\"\n\n}",
     task: "Return the string <code>'Hello, '</code> followed by <code>name</code> and an exclamation mark.",
     testMode: 'io',
     tests: [[['Ada'], 'Hello, Ada!'], [['Bob'], 'Hello, Bob!']]
+  },
+  {
+    id: 'arrowFunctions', level: 'medium', title: 'Arrow Functions',
+    summary: 'A shorter way to write a function you already understand',
+    content: `
+      <p>An <b>arrow function</b> is shorter syntax for a function. It still accepts input and can give a result back; only the writing style changes.</p>
+      <div class="example"><b>const double = number =&gt; number * 2;<br>double(4); // 8</b></div>
+      <p>Learn the regular <code>function</code> form first. Then arrows become a shortcut, not a new mystery.</p>
+    `,
+    fnName: 'triple',
+    starter: 'function triple(number) {\n  // Return number multiplied by 3.\n\n}',
+    solution: 'function triple(number) {\n  return number * 3;\n}',
+    task: 'Use the function syntax you already know to return <code>number * 3</code>. The example shows the arrow version you will see in real code.',
+    hints: ['Use return because this function must send a result back.', 'Multiply number by 3 with *.', 'return number * 3;'],
+    reflection: 'What is the same about a regular function and an arrow function?',
+    testMode: 'io',
+    tests: [[[2], 6], [[0], 0], [[-4], -12]]
   },
   {
     id: 'arrays', level: 'medium', title: 'Arrays',
@@ -400,6 +459,21 @@ const ROADMAP = [
     task: "Given <code>person = { first, last }</code>, return <code>'First Last'</code> as one string.",
     testMode: 'io',
     tests: [[[{ first: 'Ada', last: 'Lovelace' }], 'Ada Lovelace'], [[{ first: 'Grace', last: 'Hopper' }], 'Grace Hopper']]
+  },
+  {
+    id: 'scope', level: 'hard', title: 'Scope',
+    summary: 'Where a variable can be used',
+    content: `
+      <p><b>Scope</b> is the area where a variable is available. A variable created inside a function stays inside that function; a variable created in a block stays in that block.</p>
+      <div class="example"><b>function showScore() {<br>&nbsp;&nbsp;const score = 10;<br>&nbsp;&nbsp;return score;<br>}</b></div>
+      <p>Keeping values close to the code that uses them prevents accidental changes and makes programs easier to read.</p>
+    `,
+    fnName: 'makeGreeting',
+    starter: 'function makeGreeting() {\n  // Create a message inside this function,\n  // then return the message.\n\n}',
+    solution: 'function makeGreeting() {\n  const message = "Welcome!";\n  return message;\n}',
+    task: 'Create <code>const message = "Welcome!"</code> inside the function, then return <code>message</code>.',
+    testMode: 'io',
+    tests: [[[], 'Welcome!']]
   },
   {
     id: 'scopeClosures', level: 'hard', title: 'Scope & Closures',
@@ -479,6 +553,21 @@ const ROADMAP = [
       lines.push(`${ok ? '✓' : '✗'} await delayedDouble(5) → ${actual}${ok ? '' : '  (expected 10)'}`);
       return { ok, lines };
     }
+  },
+  {
+    id: 'stringMethods', level: 'medium', title: 'String Methods',
+    summary: 'Check and transform text with helpful built-in methods',
+    content: `
+      <p>Strings have useful built-in methods. For example, <code>text.includes("@")</code> checks whether text contains a character, and <code>text.toUpperCase()</code> creates uppercase text.</p>
+      <div class="example"><b>"ada@example.com".includes("@") // true</b></div>
+      <p>Methods use a dot because they belong to the value on their left. They do not change the original string unless you store the new result.</p>
+    `,
+    fnName: 'hasAtSign',
+    starter: 'function hasAtSign(text) {\n  // Return whether text includes "@".\n\n}',
+    solution: 'function hasAtSign(text) {\n  return text.includes("@");\n}',
+    task: 'Return whether <code>text</code> includes <code>"@"</code> using <code>includes()</code>.',
+    testMode: 'io',
+    tests: [[["ada@example.com"], true], [["no-at-sign"], false]]
   },
   {
     id: 'domEvents', level: 'medium', title: 'DOM & Events',
@@ -585,6 +674,20 @@ const ROADMAP = [
     testMode: 'io', tests: [[['ada'], 'Ada'], [['javaScript'], 'JavaScript']]
   }
 ];
+
+// The navigation order is also the teaching order. Keep every idea behind an
+// exercise introduced in its own lesson or an earlier one.
+const ROADMAP_ORDER = [
+  'firstProgram', 'consolePractice', 'values', 'variables', 'dataTypes',
+  'operators', 'conditionals', 'functions', 'arrowFunctions', 'arrays',
+  'loops', 'fizzBuzz', 'objects', 'scope', 'scopeClosures', 'arrayMethods',
+  'es6', 'stringMethods', 'domEvents', 'formsValidation', 'async',
+  'modulesErrors', 'apisData', 'browserStorage', 'objectsPrototypes',
+  'foundationProjects', 'professionalPractice'
+];
+ROADMAP.sort((first, second) => (
+  ROADMAP_ORDER.indexOf(first.id) - ROADMAP_ORDER.indexOf(second.id)
+));
 
 let roadmapSolved = new Set();
 let currentRoadmapIdx = 0;

@@ -250,29 +250,47 @@
 .pnode-socket {
   position: absolute;
   left: 50%;
-  width: 11px;
-  height: 11px;
+  width: 18px;
+  height: 16px;
   transform: translateX(-50%);
-  border-radius: 50%;
-  background: #444;
-  border: 1.5px solid #888;
+  background: transparent;
+  border: none;
   cursor: crosshair;
   z-index: 3;
-  transition:
-    background 0.1s,
-    border-color 0.1s,
-    transform 0.1s;
 }
 .pnode-socket.socket-in {
-  top: -6px;
+  top: -14px;
 }
 .pnode-socket.socket-out {
-  bottom: -6px;
+  bottom: -14px;
 }
-.pnode-socket:hover {
-  background: #6ab0f3;
-  border-color: #a9d2fb;
-  transform: translateX(-50%) scale(1.25);
+/* The actual visible arrow stub, Nuke-style: a small downward-pointing
+   triangle sitting just outside the node, always shown (even with no
+   connection yet) so it's clear where a link can be grabbed from/dropped. */
+.pnode-socket::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 9px solid #9a9a9a;
+  transition: border-top-color 0.1s;
+}
+.pnode-socket:hover::after {
+  border-top-color: #6ab0f3;
+}
+.pnode.linking-source .pnode-socket.socket-out::after {
+  border-top-color: #6ab0f3;
+}
+/* Once a real connection exists, its own SVG arrow (drawn on the edge line)
+   already marks the port — hide the static placeholder stub so it doesn't
+   show up as an extra arrow next to it. */
+.pnode-socket.has-link::after {
+  display: none;
 }
 
 .pnode[data-type="terminal"] {

@@ -32,6 +32,17 @@
   const nav = { space: false, ctrl: false };
   // Live node-socket connection drag (Nuke-style)
   const linking = { active: false, fromId: null };
+  // Detaching an existing edge: grab the end nearest the cursor and drag it
+  // loose, Nuke-style — drop on another node to rewire, or on empty canvas
+  // to disconnect.
+  const detaching = { active: false, edgeId: null, movingEnd: null, fixedId: null, label: "" };
+  function resetDetaching() {
+    detaching.active = false;
+    detaching.edgeId = null;
+    detaching.movingEnd = null;
+    detaching.fixedId = null;
+    detaching.label = "";
+  }
 
   function uid() { return "n" + state.nextId++; }
 
@@ -75,8 +86,14 @@
     NODE_TYPES.forEach((nt) => {
       const btn = document.createElement("button");
       btn.textContent = `${nt.icon} ${nt.label}`;
-      btn.title = `Add ${nt.label} node`;
+      btn.title = `Add ${nt.label} node (or drag onto the canvas to place it)`;
+      btn.draggable = true;
       btn.addEventListener("click", () => addNode(nt.type, nt.text));
+      btn.addEventListener("dragstart", (e) => {
+        e.dataTransfer.effectAllowed = "copy";
+        e.dataTransfer.setData("application/x-planner-node-type", nt.type);
+        e.dataTransfer.setData("text/plain", nt.type);
+      });
       toolbar.appendChild(btn);
     });
 
@@ -363,6 +380,7 @@
     const inSocket = document.createElement("div");
     inSocket.className = "pnode-socket socket-in";
     inSocket.title = "Input";
+    if (state.edges.some((e) => e.to === n.id)) inSocket.classList.add("has-link");
     el.appendChild(inSocket);
 
     const del = document.createElement("div");
@@ -406,6 +424,7 @@
     const outSocket = document.createElement("div");
     outSocket.className = "pnode-socket socket-out";
     outSocket.title = "Drag to another node to connect";
+    if (state.edges.some((e) => e.from === n.id)) outSocket.classList.add("has-link");
     outSocket.addEventListener("mousedown", (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -426,6 +445,12 @@
     el.addEventListener("mouseup", (e) => {
       if (linking.active && linking.fromId && linking.fromId !== n.id) {
         state.edges.push({ id: uid() + "e", from: linking.fromId, to: n.id, label: "" });
+      }
+      if (detaching.active && detaching.fixedId && detaching.fixedId !== n.id) {
+        const from = detaching.movingEnd === "from" ? n.id : detaching.fixedId;
+        const to = detaching.movingEnd === "to" ? n.id : detaching.fixedId;
+        state.edges.push({ id: uid() + "e", from, to, label: detaching.label || "" });
+        resetDetaching();
       }
     });
 
@@ -541,6 +566,7 @@
         wrap.scrollTop = zoomAnchorContentY * z - zoomAnchorScreenY;
       }
       if (linking.active) drawEdges(e);
+      if (detaching.active) drawEdges(e);
     });
     window.addEventListener("mouseup", () => {
       panning = false;
@@ -552,55 +578,184 @@
         document.querySelectorAll(".pnode.linking-source").forEach((el) => el.classList.remove("linking-source"));
         render();
       }
+      if (detaching.active) {
+        // Not resolved by a node's own mouseup handler, so the drop was on
+        // empty canvas: the edge was already pulled from state, so this
+        // just cleans up the live preview line (i.e. disconnects it).
+        resetDetaching();
+        render();
+      }
     });
   }
 
-  function socketToInner(el, isOutput) {
+  function nodeRectCanvas(el) {
     const inner = document.getElementById("plannerCanvasInner");
     const innerRect = inner.getBoundingClientRect();
     const r = el.getBoundingClientRect();
     const z = state.zoom || 1;
     return {
-      x: (r.left - innerRect.left) / z + r.width / z / 2,
-      y: (r.top - innerRect.top) / z + (isOutput ? r.height / z : 0),
+      left: (r.left - innerRect.left) / z,
+      top: (r.top - innerRect.top) / z,
+      width: r.width / z,
+      height: r.height / z,
     };
+  }
+
+  function nodeCenterCanvas(el) {
+    const r = nodeRectCanvas(el);
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  // Nuke-style adaptive port: the anchor point isn't pinned to a fixed
+  // top/bottom position — it's wherever a line from the node's center toward
+  // the other node crosses the node's own border. So a node beside another
+  // one connects side-to-side, a node above connects top-to-bottom, and a
+  // diagonal neighbor connects corner-to-corner — it always faces the thing
+  // it's plugged into instead of bending awkwardly out of a fixed socket.
+  // slotIndex/slotCount nudge the point sideways along whichever edge it
+  // lands on, so multiple connections on the same side don't stack.
+  function edgeAnchor(el, towardX, towardY, slotIndex, slotCount) {
+    const rect = nodeRectCanvas(el);
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const hw = rect.width / 2;
+    const hh = rect.height / 2;
+    let dx = towardX - cx;
+    let dy = towardY - cy;
+    if (dx === 0 && dy === 0) dy = 1; // degenerate case: default to facing down
+
+    // Multiple connections on the same node used to be spread out by nudging
+    // the resolved boundary point sideways in a straight line — which works
+    // for a flat rectangle edge, but slides a diamond's point clean off its
+    // slanted surface (that's the stray gap / "teleporting" line). Instead,
+    // rotate the aim angle itself per slot, then solve for the boundary
+    // along *that* angle — the result always lands exactly on the shape.
+    const SLOT_ANGLE = 0.22; // radians between adjacent connection points
+    if (slotCount > 1) {
+      const angle = Math.atan2(dy, dx) + (slotIndex - (slotCount - 1) / 2) * SLOT_ANGLE;
+      dx = Math.cos(angle);
+      dy = Math.sin(angle);
+    }
+
+    // A decision node's diamond is inscribed in its bounding box (vertices at
+    // the midpoint of each side), not the box itself — so the rectangle
+    // formula below would land the anchor off in empty space near a corner.
+    // Solve |x|/hw + |y|/hh = 1 for the diamond's actual edge instead.
+    const isDiamond = el.dataset.type === "decision";
+    let x, y;
+    if (isDiamond) {
+      const denom = Math.abs(dx) / hw + Math.abs(dy) / hh;
+      const t = denom > 0 ? 1 / denom : 0;
+      x = cx + dx * t;
+      y = cy + dy * t;
+    } else {
+      const tx = dx !== 0 ? hw / Math.abs(dx) : Infinity;
+      const ty = dy !== 0 ? hh / Math.abs(dy) : Infinity;
+      const t = Math.min(tx, ty);
+      x = cx + dx * t;
+      y = cy + dy * t;
+    }
+    return { x, y };
   }
 
   function drawEdges(liveMouseEvent) {
     const svg = document.getElementById("plannerSvg");
     const inner = document.getElementById("plannerCanvasInner");
     if (!svg || !inner) return;
-    svg.querySelectorAll(".pedge, .pedge-label, .pedge-live").forEach((e) => e.remove());
+    svg.querySelectorAll(".pedge, .pedge-hit, .pedge-label, .pedge-live").forEach((e) => e.remove());
     const z = state.zoom || 1;
+
+    // Group edges sharing a source (its own output arrows) and edges sharing
+    // a destination (its own input arrows) so multiple connections on the
+    // same side of a node spread out instead of stacking.
+    const outGroups = new Map();
+    const inGroups = new Map();
+    state.edges.forEach((edge) => {
+      if (!outGroups.has(edge.from)) outGroups.set(edge.from, []);
+      outGroups.get(edge.from).push(edge);
+      if (!inGroups.has(edge.to)) inGroups.set(edge.to, []);
+      inGroups.get(edge.to).push(edge);
+    });
 
     state.edges.forEach((edge) => {
       const fromEl = inner.querySelector(`.pnode[data-id="${edge.from}"]`);
       const toEl = inner.querySelector(`.pnode[data-id="${edge.to}"]`);
       if (!fromEl || !toEl) return;
-      const p1 = socketToInner(fromEl, true);
-      const p2 = socketToInner(toEl, false);
-      drawBezier(svg, p1.x, p1.y, p2.x, p2.y, "pedge", edge.label);
+
+      const fromCenter = nodeCenterCanvas(fromEl);
+      const toCenter = nodeCenterCanvas(toEl);
+      const outList = outGroups.get(edge.from) || [edge];
+      const inList = inGroups.get(edge.to) || [edge];
+      const p1 = edgeAnchor(fromEl, toCenter.x, toCenter.y, outList.indexOf(edge), outList.length);
+      const p2 = edgeAnchor(toEl, fromCenter.x, fromCenter.y, inList.indexOf(edge), inList.length);
+
+      drawBezier(svg, p1.x, p1.y, p2.x, p2.y, "pedge", edge.label, false, (e) => startDetach(e, edge, p1, p2));
     });
 
     // Live line while dragging a new connection from a socket, Nuke-style
     if (linking.active && linking.fromId && liveMouseEvent) {
       const fromEl = inner.querySelector(`.pnode[data-id="${linking.fromId}"]`);
       if (fromEl) {
-        const p1 = socketToInner(fromEl, true);
         const innerRect = inner.getBoundingClientRect();
-        const p2 = {
+        const mouseP = {
           x: (liveMouseEvent.clientX - innerRect.left) / z,
           y: (liveMouseEvent.clientY - innerRect.top) / z,
         };
+        const outList = outGroups.get(linking.fromId) || [];
+        const p1 = edgeAnchor(fromEl, mouseP.x, mouseP.y, outList.length, outList.length + 1);
+        drawBezier(svg, p1.x, p1.y, mouseP.x, mouseP.y, "pedge-live", "", true);
+      }
+    }
+
+    // Live line while an existing edge's end is being dragged loose
+    if (detaching.active && liveMouseEvent) {
+      const fixedEl = inner.querySelector(`.pnode[data-id="${detaching.fixedId}"]`);
+      if (fixedEl) {
+        const isOutputEnd = detaching.movingEnd === "to"; // fixed end is the source
+        const group = isOutputEnd ? outGroups.get(detaching.fixedId) || [] : inGroups.get(detaching.fixedId) || [];
+        const innerRect = inner.getBoundingClientRect();
+        const mouseP = {
+          x: (liveMouseEvent.clientX - innerRect.left) / z,
+          y: (liveMouseEvent.clientY - innerRect.top) / z,
+        };
+        const fixedP = edgeAnchor(fixedEl, mouseP.x, mouseP.y, group.length, group.length + 1);
+        const p1 = isOutputEnd ? fixedP : mouseP;
+        const p2 = isOutputEnd ? mouseP : fixedP;
         drawBezier(svg, p1.x, p1.y, p2.x, p2.y, "pedge-live", "", true);
       }
     }
   }
 
-  function drawBezier(svg, x1, y1, x2, y2, cls, label, isLive) {
+  // Grab whichever end of an existing edge is nearer the click and start
+  // dragging it loose (Nuke's "grab the arrow tail/head to disconnect").
+  function startDetach(e, edge, p1, p2) {
+    e.stopPropagation();
+    e.preventDefault();
+    const inner = document.getElementById("plannerCanvasInner");
+    const innerRect = inner.getBoundingClientRect();
+    const z = state.zoom || 1;
+    const mx = (e.clientX - innerRect.left) / z;
+    const my = (e.clientY - innerRect.top) / z;
+    const dFrom = Math.hypot(mx - p1.x, my - p1.y);
+    const dTo = Math.hypot(mx - p2.x, my - p2.y);
+    const movingEnd = dTo <= dFrom ? "to" : "from";
+
+    detaching.active = true;
+    detaching.edgeId = edge.id;
+    detaching.movingEnd = movingEnd;
+    detaching.fixedId = movingEnd === "to" ? edge.from : edge.to;
+    detaching.label = edge.label || "";
+
+    state.edges = state.edges.filter((ed) => ed.id !== edge.id);
+    render();
+  }
+
+  function drawBezier(svg, x1, y1, x2, y2, cls, label, isLive, onGrab) {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    const dy = Math.max(40, Math.abs(y2 - y1) / 2);
-    const d = `M ${x1} ${y1} C ${x1} ${y1 + dy}, ${x2} ${y2 - dy}, ${x2} ${y2}`;
+    // Nuke draws connections as plain straight lines between ports, not an
+    // S-curve — a straight segment always points directly at both nodes, so
+    // it never looks disconnected regardless of their relative position.
+    const d = `M ${x1} ${y1} L ${x2} ${y2}`;
     path.setAttribute("d", d);
     path.setAttribute("class", cls);
     path.setAttribute("fill", "none");
@@ -609,6 +764,20 @@
     if (isLive) path.setAttribute("stroke-dasharray", "5,4");
     else path.setAttribute("marker-end", "url(#arrowHead)");
     svg.appendChild(path);
+
+    // A wide, invisible path on top of the visible one makes the thin line
+    // much easier to grab for detaching, without changing how it looks.
+    if (onGrab) {
+      const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hit.setAttribute("d", d);
+      hit.setAttribute("class", "pedge-hit");
+      hit.setAttribute("fill", "none");
+      hit.setAttribute("stroke", "transparent");
+      hit.setAttribute("stroke-width", "14");
+      hit.style.cursor = "grab";
+      hit.addEventListener("mousedown", onGrab);
+      svg.appendChild(hit);
+    }
 
     if (label) {
       const midY = (y1 + y2) / 2;
@@ -624,11 +793,39 @@
     }
   }
 
+  // ---------- Drag-and-drop a toolbar button straight onto the canvas ----------
+  function setupNodeDrop(wrap) {
+    const inner = document.getElementById("plannerCanvasInner");
+
+    wrap.addEventListener("dragover", (e) => {
+      if (!e.dataTransfer.types.includes("application/x-planner-node-type")) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    });
+
+    wrap.addEventListener("drop", (e) => {
+      const type = e.dataTransfer.getData("application/x-planner-node-type");
+      if (!type) return;
+      e.preventDefault();
+
+      const nt = NODE_TYPES.find((t) => t.type === type);
+      if (!nt) return;
+
+      const z = state.zoom || 1;
+      const innerRect = inner.getBoundingClientRect();
+      const x = Math.min(CANVAS_W - 40, Math.max(0, (e.clientX - innerRect.left) / z - 70));
+      const y = Math.min(CANVAS_H - 40, Math.max(0, (e.clientY - innerRect.top) / z - 30));
+
+      addNode(nt.type, nt.text, x, y);
+    });
+  }
+
   // ---------- Init ----------
   function init() {
     const panel = buildShell();
     buildToggleButton(panel);
     setupPanZoom(document.getElementById("plannerCanvasWrap"));
+    setupNodeDrop(document.getElementById("plannerCanvasWrap"));
     render();
     centerOnNodes();
   }

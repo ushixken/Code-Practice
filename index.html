@@ -28,7 +28,7 @@
 
       <div class="main">
         <div class="activitybar">
-          <button class="active" title="Problems">
+          <button class="active" title="Problems" id="problemsBtn">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -39,23 +39,40 @@
               <path d="M4 9h16" />
             </svg>
           </button>
-          <button title="Progress" id="statsBtn">
+          <button title="Roadmap" id="roadmapBtn">
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               stroke-width="1.8"
             >
-              <path d="M3 20h18" />
-              <path d="M6 20V10" />
-              <path d="M12 20V4" />
-              <path d="M18 20v14" />
+              <path d="M12 3 2 8l10 5 10-5-10-5z" />
+              <path d="M6 10.5V16c0 1 2.5 3 6 3s6-2 6-3v-5.5" />
             </svg>
           </button>
         </div>
 
         <div class="sidebar">
           <div class="sidebar-head">PROBLEMS</div>
+          <div class="level-select-wrap">
+            <select id="levelSelect" class="level-select">
+              <option value="all">All Levels</option>
+              <option value="easy">🟢 Beginner</option>
+              <option value="medium">🟡 Advanced</option>
+              <option value="hard">🔴 Expert</option>
+            </select>
+            <svg
+              class="level-select-chev"
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
           <div class="progress-wrap">
             <div class="progress-track">
               <div
@@ -182,6 +199,28 @@
             <div class="rp-title" id="rpTitle">notString</div>
           </div>
           <div class="rp-body" id="rpBody"></div>
+        </div>
+
+        <div class="roadmap-view" id="roadmapView">
+          <div class="roadmap-path">
+            <div class="roadmap-path-head">
+              <div class="sidebar-head">JAVASCRIPT ROADMAP</div>
+              <div class="roadmap-progress-wrap">
+                <div class="progress-track">
+                  <div
+                    class="progress-fill"
+                    id="roadmapProgressFill"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <div class="progress-label" id="roadmapProgressLabel">
+                  0 / 0 mastered
+                </div>
+              </div>
+            </div>
+            <div class="roadmap-nodes" id="roadmapNodes"></div>
+          </div>
+          <div class="roadmap-detail" id="roadmapDetail"></div>
         </div>
       </div>
 

@@ -292,6 +292,13 @@
 .pnode-socket.has-link::after {
   display: none;
 }
+/* While a socket's own connection is being dragged, its static stub is
+   replaced by the live preview line's own arrowhead (which now actually
+   rotates to match the drag angle) — hide the static one so there's a
+   single, correctly-oriented arrow instead of two overlapping ones. */
+.pnode-socket.socket-drag-hide::after {
+  display: none;
+}
 
 .pnode[data-type="terminal"] {
   border-radius: 999px;

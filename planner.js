@@ -30,8 +30,11 @@
 
   // Navigation modifier keys
   const nav = { space: false, ctrl: false };
-  // Live node-socket connection drag (Nuke-style)
-  const linking = { active: false, fromId: null };
+  // Live node-socket connection drag (Nuke-style). Dragging from an output
+  // socket sets fromId (line follows the mouse as the "to" end); dragging
+  // from an input socket sets toId instead (line follows the mouse as the
+  // "from" end) — same live-preview/drop logic, just mirrored.
+  const linking = { active: false, fromId: null, toId: null };
   // Detaching an existing edge: grab the end nearest the cursor and drag it
   // loose, Nuke-style — drop on another node to rewire, or on empty canvas
   // to disconnect.
@@ -379,8 +382,17 @@
 
     const inSocket = document.createElement("div");
     inSocket.className = "pnode-socket socket-in";
-    inSocket.title = "Input";
+    inSocket.title = "Drag to another node to connect";
     if (state.edges.some((e) => e.to === n.id)) inSocket.classList.add("has-link");
+    inSocket.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      linking.active = true;
+      linking.toId = n.id;
+      el.classList.add("linking-source");
+      inSocket.classList.add("socket-drag-hide");
+      drawEdges();
+    });
     el.appendChild(inSocket);
 
     const del = document.createElement("div");
@@ -431,6 +443,7 @@
       linking.active = true;
       linking.fromId = n.id;
       el.classList.add("linking-source");
+      outSocket.classList.add("socket-drag-hide");
       drawEdges();
     });
     el.appendChild(outSocket);
@@ -441,10 +454,13 @@
       render();
     });
 
-    // Dropping a connection onto this node's body (or its in-socket)
+    // Dropping a connection onto this node's body (or its sockets)
     el.addEventListener("mouseup", (e) => {
       if (linking.active && linking.fromId && linking.fromId !== n.id) {
         state.edges.push({ id: uid() + "e", from: linking.fromId, to: n.id, label: "" });
+      }
+      if (linking.active && linking.toId && linking.toId !== n.id) {
+        state.edges.push({ id: uid() + "e", from: n.id, to: linking.toId, label: "" });
       }
       if (detaching.active && detaching.fixedId && detaching.fixedId !== n.id) {
         const from = detaching.movingEnd === "from" ? n.id : detaching.fixedId;
@@ -575,6 +591,7 @@
       if (linking.active) {
         linking.active = false;
         linking.fromId = null;
+        linking.toId = null;
         document.querySelectorAll(".pnode.linking-source").forEach((el) => el.classList.remove("linking-source"));
         render();
       }
@@ -655,6 +672,18 @@
       x = cx + dx * t;
       y = cy + dy * t;
     }
+
+    // Nudge the point outward past the node's own border by a small gap.
+    // A marker-end arrowhead is centered exactly on this coordinate, so
+    // landing it precisely on the border lets the node's opaque background
+    // (which paints on top of the SVG in stacking order) swallow half the
+    // arrowhead — it reads as a "stuck", barely-visible stub. Pushing it out
+    // clears the node entirely so the whole rotated arrowhead is visible.
+    const GAP = 8;
+    const mag = Math.hypot(dx, dy) || 1;
+    x += (dx / mag) * GAP;
+    y += (dy / mag) * GAP;
+
     return { x, y };
   }
 
@@ -693,25 +722,37 @@
     });
 
     // Live line while dragging a new connection from a socket, Nuke-style
-    if (linking.active && linking.fromId && liveMouseEvent) {
-      const fromEl = inner.querySelector(`.pnode[data-id="${linking.fromId}"]`);
-      if (fromEl) {
-        const innerRect = inner.getBoundingClientRect();
-        const mouseP = {
-          x: (liveMouseEvent.clientX - innerRect.left) / z,
-          y: (liveMouseEvent.clientY - innerRect.top) / z,
-        };
-        const outList = outGroups.get(linking.fromId) || [];
-        const p1 = edgeAnchor(fromEl, mouseP.x, mouseP.y, outList.length, outList.length + 1);
-        drawBezier(svg, p1.x, p1.y, mouseP.x, mouseP.y, "pedge-live", "", true);
+    if (linking.active && (linking.fromId || linking.toId) && liveMouseEvent) {
+      const innerRect = inner.getBoundingClientRect();
+      const mouseP = {
+        x: (liveMouseEvent.clientX - innerRect.left) / z,
+        y: (liveMouseEvent.clientY - innerRect.top) / z,
+      };
+      if (linking.fromId) {
+        const fromEl = inner.querySelector(`.pnode[data-id="${linking.fromId}"]`);
+        if (fromEl) {
+          const outList = outGroups.get(linking.fromId) || [];
+          const p1 = edgeAnchor(fromEl, mouseP.x, mouseP.y, outList.length, outList.length + 1);
+          drawBezier(svg, p1.x, p1.y, mouseP.x, mouseP.y, "pedge-live", "", true);
+        }
+      } else if (linking.toId) {
+        const toEl = inner.querySelector(`.pnode[data-id="${linking.toId}"]`);
+        if (toEl) {
+          const inList = inGroups.get(linking.toId) || [];
+          const p2 = edgeAnchor(toEl, mouseP.x, mouseP.y, inList.length, inList.length + 1);
+          drawBezier(svg, mouseP.x, mouseP.y, p2.x, p2.y, "pedge-live", "", true);
+        }
       }
     }
 
-    // Live line while an existing edge's end is being dragged loose
+    // Live line while an existing edge's end is being dragged loose. The end
+    // that stays put keeps acting as its original role (tail stays a plain
+    // tail, head stays the arrowhead — just rotating to track the cursor);
+    // only the grabbed end's position actually moves.
     if (detaching.active && liveMouseEvent) {
       const fixedEl = inner.querySelector(`.pnode[data-id="${detaching.fixedId}"]`);
       if (fixedEl) {
-        const isOutputEnd = detaching.movingEnd === "to"; // fixed end is the source
+        const isOutputEnd = detaching.movingEnd === "to"; // fixed end is the source (tail)
         const group = isOutputEnd ? outGroups.get(detaching.fixedId) || [] : inGroups.get(detaching.fixedId) || [];
         const innerRect = inner.getBoundingClientRect();
         const mouseP = {
@@ -726,8 +767,22 @@
     }
   }
 
+  // Shared teardown: pull the edge out of state and mark one end as the
+  // "moving" end being dragged loose, the other as the fixed anchor.
+  function beginDetach(edge, movingEnd) {
+    detaching.active = true;
+    detaching.edgeId = edge.id;
+    detaching.movingEnd = movingEnd;
+    detaching.fixedId = movingEnd === "to" ? edge.from : edge.to;
+    detaching.label = edge.label || "";
+    state.edges = state.edges.filter((ed) => ed.id !== edge.id);
+    render();
+  }
+
   // Grab whichever end of an existing edge is nearer the click and start
   // dragging it loose (Nuke's "grab the arrow tail/head to disconnect").
+  // The whole line (via the invisible wide hit-path) and the arrowhead
+  // itself are both grabbable — whichever end is closer to the click wins.
   function startDetach(e, edge, p1, p2) {
     e.stopPropagation();
     e.preventDefault();
@@ -738,16 +793,7 @@
     const my = (e.clientY - innerRect.top) / z;
     const dFrom = Math.hypot(mx - p1.x, my - p1.y);
     const dTo = Math.hypot(mx - p2.x, my - p2.y);
-    const movingEnd = dTo <= dFrom ? "to" : "from";
-
-    detaching.active = true;
-    detaching.edgeId = edge.id;
-    detaching.movingEnd = movingEnd;
-    detaching.fixedId = movingEnd === "to" ? edge.from : edge.to;
-    detaching.label = edge.label || "";
-
-    state.edges = state.edges.filter((ed) => ed.id !== edge.id);
-    render();
+    beginDetach(edge, dTo <= dFrom ? "to" : "from");
   }
 
   function drawBezier(svg, x1, y1, x2, y2, cls, label, isLive, onGrab) {
@@ -762,7 +808,7 @@
     path.setAttribute("stroke", isLive ? "#6ab0f3" : "#8a8a8a");
     path.setAttribute("stroke-width", "1.6");
     if (isLive) path.setAttribute("stroke-dasharray", "5,4");
-    else path.setAttribute("marker-end", "url(#arrowHead)");
+    path.setAttribute("marker-end", "url(#arrowHead)");
     svg.appendChild(path);
 
     // A wide, invisible path on top of the visible one makes the thin line

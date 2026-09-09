@@ -1737,7 +1737,7 @@ async function runRoadmapCode() {
   const lesson = ROADMAP[currentRoadmapIdx]
   const visibleCode = document.getElementById("roadmapCodeInput").value
   if (activeRoadmapPractical) {
-    runActiveRoadmapPractical(visibleCode)
+    await runActiveRoadmapPractical(visibleCode)
     return
   }
   const code = isRoadmapFunctionWrapped(visibleCode, lesson)
@@ -1848,10 +1848,15 @@ async function runRoadmapCode() {
 async function runActiveRoadmapPractical(code) {
   const terminal = document.getElementById("roadmapTerminal")
   terminal.innerHTML = ""
+  const formatConsoleValue = (value) => {
+    if (typeof value === "string") return value
+    if (value && typeof value === "object") return JSON.stringify(value)
+    return String(value)
+  }
   const runSource = async (source) => {
     const output = []
     const originalLog = console.log
-    console.log = (...values) => output.push(values.join(" "))
+    console.log = (...values) => output.push(values.map(formatConsoleValue).join(" "))
     try {
       await new Function(source)()
       return { output }
@@ -1862,7 +1867,6 @@ async function runActiveRoadmapPractical(code) {
     }
   }
 
-  const expected = await runSource(activeRoadmapPractical.practical.code)
   const result = await runSource(code)
   if (result.error) {
     terminal.innerHTML = '<div class="term-line term-fail">✗ Your practical code failed to run:</div>'
@@ -1873,7 +1877,8 @@ async function runActiveRoadmapPractical(code) {
     return
   }
 
-  const isCorrect = JSON.stringify(result.output) === JSON.stringify(expected.output)
+  const expectedOutput = activeRoadmapPractical.practical.expectedOutput
+  const isCorrect = JSON.stringify(result.output) === JSON.stringify(expectedOutput)
   if (result.output.length) {
     terminal.innerHTML = '<div class="term-line term-info">Console output:</div>'
     result.output.forEach((line) => {
@@ -1886,13 +1891,13 @@ async function runActiveRoadmapPractical(code) {
   const checkLine = document.createElement("div")
   checkLine.className = "term-line " + (isCorrect ? "term-pass" : "term-fail")
   checkLine.textContent = isCorrect
-    ? "✓ Correct — your practical solution produced the expected result."
+    ? "✓ Correct practical output — your solution produced the expected result."
     : "✗ Not quite — check the scenario and try again."
   terminal.appendChild(checkLine)
-  if (!isCorrect && expected.output.length) {
+  if (!isCorrect && expectedOutput.length) {
     const expectedLine = document.createElement("div")
     expectedLine.className = "term-line term-dim"
-    expectedLine.textContent = "Expected console output: " + expected.output.join(" | ")
+    expectedLine.textContent = "Expected console output: " + expectedOutput.join(" | ")
     terminal.appendChild(expectedLine)
   }
 }

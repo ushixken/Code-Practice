@@ -24,6 +24,7 @@ function roadmapPracticalsMarkup(lessonId) {
           <article class="roadmap-practical-card" data-practical-card="${practicalId}">
             <div><span>Scenario ${index + 1}</span><h4>${practical.title}</h4></div>
             <p>${practical.prompt}</p>
+            <div class="roadmap-practical-expected"><span>Expected output</span><code>${practical.expectedOutput.join("\n")}</code></div>
             <button class="roadmap-practical-start" type="button" data-practical-start="${practicalId}">Try this practical</button>
           </article>
         `

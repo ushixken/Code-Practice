@@ -965,6 +965,25 @@ body {
   font-size: 12px;
   line-height: 1.5;
 }
+.roadmap-practical-expected {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--accent-dim);
+  border-radius: 4px;
+  background: var(--bg-0);
+}
+.roadmap-practical-expected span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text-2);
+  font: 10px var(--mono);
+  text-transform: uppercase;
+}
+.roadmap-practical-expected code {
+  color: var(--text-0);
+  font: 12px var(--mono);
+  white-space: pre-wrap;
+}
 .roadmap-practical-start,
 .roadmap-try-another-btn {
   border: 1px solid var(--accent-dim);

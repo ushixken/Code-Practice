@@ -173,13 +173,20 @@ const ROADMAP = [
     content: `
       <p>A <b>program</b> is a sequence of instructions. JavaScript reads those instructions from top to bottom, keeps values in memory, and performs each action in order.</p>
       <p>In a browser, JavaScript runs in the page. In Node.js, it runs on your computer. The language is the same; the environment gives it different tools.</p>
-      <div class="example"><b>console.log("Hello, JavaScript!");</b><br>→ Hello, JavaScript!</div>
+      <div class="example"><b>console.log("JavaScript is ready!");</b><br>→ JavaScript is ready!</div>
       <p>Use <code>console.log()</code> to inspect values while learning and debugging. It is the quickest way to ask: “What is my code doing right now?”</p>
       <div class="roadmap-runner-note"><b>Why is there a function switch?</b> JavaScript can run <code>console.log()</code> by itself in the browser console or a <code>.js</code> file. This learning app uses a function behind the scenes only so it can run and check your lesson safely. You do not need to understand functions yet.</div>
     `,
     fnName: 'firstProgram',
-    starter: "function firstProgram() {\n  // Print this message in the console.\n  console.log(\"Hello, JavaScript!\");\n}",
+    starter: "function firstProgram() {\n  // Type your console.log(...) line below.\n\n}",
+    solution: "function firstProgram() {\n  console.log(\"Hello, JavaScript!\");\n}",
     task: 'Use <code>console.log()</code> to print <code>"Hello, JavaScript!"</code>. This is how you inspect values while learning and debugging.',
+    hints: [
+      'Use the browser’s debugging tool: console.log(...).',
+      'The text you want to print is a string, so put it inside double quotes.',
+      'Start with: console.log("Hello, JavaScript!");'
+    ],
+    reflection: 'Where would console.log() help you understand a program that is not behaving as expected?',
     testMode: 'custom',
     validate: async (fn) => {
       const lines = [];
@@ -197,17 +204,72 @@ const ROADMAP = [
     }
   },
   {
-    id: 'values', level: 'easy', title: 'Values, Variables, and Types',
-    summary: 'The building blocks every JavaScript program uses',
+    id: 'consolePractice', level: 'easy', title: 'Console Practice',
+    summary: 'Type and run a message on your own',
     content: `
-      <p>Every program works with <b>values</b>: text, numbers, true/false answers, and collections. A variable gives a value a useful name.</p>
-      <div class="example"><b>const user = "Ada";<br>let score = 0;<br>score = score + 10;</b></div>
-      <p>Use <code>const</code> by default. Use <code>let</code> only when the variable needs to change. JavaScript is dynamically typed, so <code>typeof score</code> is <code>'number'</code> and <code>typeof user</code> is <code>'string'</code>.</p>
+      <p>You have seen <code>console.log()</code>. Now type it yourself without a pre-filled answer. This is how you begin building typing confidence.</p>
+      <div class="example"><b>console.log("I can use the console!");</b></div>
+      <p>Use the same punctuation: parentheses around the message, double quotes around the text, and a semicolon at the end.</p>
     `,
-    fnName: 'makeMessage',
-    starter: "function makeMessage(name) {\n  // Return \"Hello, \" followed by name.\n\n}",
-    task: 'Practice using a parameter and string concatenation to return a message.',
-    testMode: 'io', tests: [[['Ada'], 'Hello, Ada'], [['Sam'], 'Hello, Sam']]
+    fnName: 'consolePractice',
+    starter: "function consolePractice() {\n  // Print: I can use the console!\n\n}",
+    solution: "function consolePractice() {\n  console.log(\"I can use the console!\");\n}",
+    task: 'Type a <code>console.log()</code> statement that prints <code>"I can use the console!"</code>.',
+    hints: [
+      'The command starts with console.log.',
+      'Put the message inside parentheses and double quotes.',
+      'console.log("I can use the console!");'
+    ],
+    reflection: 'What part of the console.log() syntax do you need to remember next time?',
+    testMode: 'custom',
+    validate: async (fn) => {
+      const output = [];
+      const originalLog = console.log;
+      console.log = (...values) => output.push(values.join(' '));
+      try { fn(); } finally { console.log = originalLog; }
+      const ok = output.includes('I can use the console!');
+      return {
+        ok,
+        consoleOutput: output,
+        lines: [`${ok ? '✓' : '✗'} Lesson check: print "I can use the console!".`]
+      };
+    }
+  },
+  {
+    id: 'values', level: 'easy', title: 'Your First Variable',
+    summary: 'Store one value, then print it with console.log()',
+    content: `
+      <p>A <b>variable</b> is a named place where JavaScript stores a value. Start with one value and one clear name.</p>
+      <div class="example"><b>const city = "Manila";<br>console.log(city);</b></div>
+      <p>Use <code>const</code> when the value will stay the same. The word <code>city</code> is a name we chose; it helps us remember what the value means. Later, you will learn when to use <code>let</code> for values that change.</p>
+    `,
+    fnName: 'firstVariable',
+    starter: "function firstVariable() {\n  // Create user, set it to \"Ada\", then print user.\n\n}",
+    solution: "function firstVariable() {\n  const user = \"Ada\";\n  console.log(user);\n}",
+    task: 'Create a variable named <code>user</code>, set it to <code>"Ada"</code>, then print it with <code>console.log(user)</code>.',
+    hints: [
+      'Use const to create a value that will not change.',
+      'Put the text "Ada" inside double quotes.',
+      'Use console.log(user) after creating the variable.'
+    ],
+    reflection: 'Why is a name like user easier to understand than repeating "Ada" throughout the code?',
+    testMode: 'custom',
+    validate: async (fn) => {
+      const output = [];
+      const originalLog = console.log;
+      console.log = (...values) => output.push(values.join(' '));
+      try {
+        fn();
+      } finally {
+        console.log = originalLog;
+      }
+      const ok = output.includes('Ada');
+      return {
+        ok,
+        consoleOutput: output,
+        lines: [`${ok ? '✓' : '✗'} Lesson check: print the value stored in user${ok ? '.' : ' using console.log(user).'}`]
+      };
+    }
   },
   {
     id: 'variables', level: 'easy', title: 'Variables (var, let, const)',
@@ -318,6 +380,12 @@ const ROADMAP = [
     fnName: 'fizzBuzz',
     starter: "function fizzBuzz(n) {\n  // Return an array from 1 to n.\n  // Multiples of 3 become \"Fizz\"; multiples of 5 become \"Buzz\";\n  // multiples of both become \"FizzBuzz\".\n\n}",
     task: 'Build the result one number at a time. Start with an empty array, loop from 1 through <code>n</code>, then return the array.',
+    hints: [
+      'Create an empty array before the loop: const result = [];',
+      'Use i % 3 === 0 to check for multiples of 3.',
+      'Check i % 15 === 0 first, then 3, then 5; push each result into the array and return it.'
+    ],
+    reflection: 'Why must the “both 3 and 5” case be checked before the individual cases?',
     testMode: 'io',
     tests: [[[5], [1, 2, 'Fizz', 4, 'Buzz']], [[15], [1, 2, 'Fizz', 4, 'Buzz', 'Fizz', 7, 8, 'Fizz', 'Buzz', 11, 'Fizz', 13, 14, 'FizzBuzz']]]
   },
@@ -424,6 +492,58 @@ const ROADMAP = [
     starter: "function buttonMessage(name) {\n  // In a real page, an event handler can use this\n  // value to update the DOM. Return a button message.\n\n}",
     task: 'Return <code>name + " saved"</code>. This keeps the example focused on the value a click handler would display.',
     testMode: 'io', tests: [[['Plan'], 'Plan saved'], [['Note'], 'Note saved']]
+  },
+  {
+    id: 'formsValidation', level: 'medium', title: 'Forms & Validation',
+    summary: 'Read user input and give helpful feedback',
+    content: `
+      <p>Forms turn user input into program data. Read values from inputs, stop unwanted page reloads with <code>event.preventDefault()</code>, then validate before using the data.</p>
+      <div class="example"><b>form.addEventListener("submit", (event) =&gt; {<br>&nbsp;&nbsp;event.preventDefault();<br>&nbsp;&nbsp;if (!email.includes("@")) showError("Enter a valid email");<br>});</b></div>
+      <p>A useful validation message tells the user exactly what to fix. Build login and registration forms only after you can reliably handle one input.</p>
+    `,
+    fnName: 'isValidEmail',
+    starter: "function isValidEmail(email) {\n  // Return true when email contains \"@\".\n\n}",
+    task: 'Start with one clear validation rule: return whether the email contains <code>"@"</code>.',
+    testMode: 'io', tests: [[["ada@example.com"], true], [["not-an-email"], false]]
+  },
+  {
+    id: 'browserStorage', level: 'hard', title: 'Browser Storage',
+    summary: 'Keep small amounts of data between page reloads',
+    content: `
+      <p><code>localStorage</code> saves string data in the browser. Pair it with <code>JSON.stringify()</code> when saving objects or arrays, and <code>JSON.parse()</code> when reading them back.</p>
+      <div class="example"><b>localStorage.setItem("theme", "dark");<br>const theme = localStorage.getItem("theme");</b></div>
+      <p>Use it for a notes app, saved settings, or a small todo list—not secrets or passwords.</p>
+    `,
+    fnName: 'saveSetting',
+    starter: "function saveSetting(key, value) {\n  // Return an object that represents the setting to save.\n\n}",
+    task: 'Return an object with the given key and value. This models the data before a browser stores it.',
+    testMode: 'io', tests: [[["theme", "dark"], { key: "theme", value: "dark" }]]
+  },
+  {
+    id: 'apisData', level: 'hard', title: 'APIs & Data',
+    summary: 'Use JSON, HTTP, fetch, and error handling',
+    content: `
+      <p>An API lets your program request data from another service. Most web APIs send JSON. A safe request checks the response before using its data.</p>
+      <div class="example"><b>const response = await fetch("/api/weather");<br>if (!response.ok) throw new Error("Request failed");<br>const data = await response.json();</b></div>
+      <p>Practice with a weather, movie, currency, or GitHub-profile project. Keep network code separate from how you display the result.</p>
+    `,
+    fnName: 'readUserName',
+    starter: "function readUserName(data) {\n  // data is { user: { name: \"Ada\" } }.\n  // Return the name.\n\n}",
+    task: 'Extract a value from API-like JSON data using object access.',
+    testMode: 'io', tests: [[[{ user: { name: "Ada" } }], "Ada"]]
+  },
+  {
+    id: 'foundationProjects', level: 'hard', title: 'Final Foundation Projects',
+    summary: 'Turn your knowledge into complete applications',
+    content: `
+      <p>Graduate from the Foundation Track by building projects without copying a tutorial line by line. Plan the inputs, state, user actions, and edge cases before you code.</p>
+      <div class="example"><b>Beginner: calculator → todo app → quiz app → form validator<br>Intermediate: weather app → movie app → expense tracker → notes app<br>Advanced foundation: e-commerce frontend → dashboard → social media UI</b></div>
+      <p>For every project, write a short plan, build the smallest working version, test it, then improve it. That loop is how programming skill becomes durable.</p>
+    `,
+    fnName: 'projectPlan',
+    starter: "function projectPlan(project) {\n  // Return a first step for the chosen project.\n\n}",
+    task: 'Return <code>"Plan " + project</code>. Then open the Code Planner and break your chosen project into small tasks.',
+    testMode: 'io', tests: [[["a todo app"], "Plan a todo app"]]
   },
   {
     id: 'modulesErrors', level: 'hard', title: 'Modules & Error Handling',
@@ -535,6 +655,18 @@ function updateRoadmapProgress(){
   roadmapProgressLabel.textContent = `${solvedCount} / ${visibleLessons.length} mastered`;
 }
 
+function learningSupportFor(lesson){
+  return {
+    hints: lesson.hints || [
+      'Re-read the task and identify the exact input and expected result.',
+      'Start with the smallest valid version before adding every edge case.',
+      'Use the example above to check each piece of your answer.'
+    ],
+    solution: lesson.solution || lesson.starter,
+    reflection: lesson.reflection || 'What part of this lesson would you explain differently to a beginner?'
+  };
+}
+
 function loadRoadmapLesson(idx){
   currentRoadmapIdx = idx;
   roadmapRanOnce = false;
@@ -547,16 +679,46 @@ function loadRoadmapLesson(idx){
   const starterForDisplay = roadmapFunctionWrapperHidden
     ? unwrapRoadmapFunction(lesson.starter)
     : lesson.starter;
+  const learningSupport = learningSupportFor(lesson);
+  const solutionForDisplay = roadmapFunctionWrapperHidden
+    ? unwrapRoadmapFunction(learningSupport.solution)
+    : learningSupport.solution;
 
   roadmapDetailEl.innerHTML = `
-    <div class="rp-head">
-      <span class="rp-diff ${lesson.level}">${LEVEL_LABELS[lesson.level]}</span>
-      <div class="rp-title">${lesson.title}</div>
-    </div>
-    <div class="rp-body">
-      ${lesson.content}
-      <div class="rp-section-label">YOUR TURN</div>
-      <p>${lesson.task}</p>
+    <div class="roadmap-lesson-layout">
+      <section class="roadmap-workspace rp-body">
+        <div class="roadmap-workspace-head">
+          <span>Practice workspace</span>
+          <strong>${lesson.title}</strong>
+        </div>
+      <section class="roadmap-practice">
+        <div class="roadmap-practice-head">
+          <div>
+            <span class="rp-section-label">YOUR TURN</span>
+            <h3>Try it yourself</h3>
+          </div>
+          <span class="roadmap-practice-step">1. Write · 2. Test · 3. Learn</span>
+        </div>
+        <div class="roadmap-task-card">
+          <span>YOUR GOAL</span>
+          <p>${lesson.task}</p>
+        </div>
+      <div class="roadmap-learning-support">
+        <div class="roadmap-help-label">Need a nudge? Hints are optional.</div>
+        <div class="roadmap-learning-actions">
+          <button class="roadmap-hint-btn" id="roadmapHintBtn" type="button">Show hint 1</button>
+          <span id="roadmapHintProgress">Try first—hints appear one at a time.</span>
+        </div>
+        <div class="roadmap-hints" id="roadmapHints"></div>
+        <details class="roadmap-solution" id="roadmapSolution">
+          <summary>Reveal a solution only after trying</summary>
+          <p>This is one working approach. Compare it to yours; more than one solution can be correct.</p>
+          <pre><code id="roadmapSolutionCode"></code></pre>
+          <button class="roadmap-use-solution" id="roadmapUseSolution" type="button">Use this solution in my editor</button>
+        </details>
+        <div class="roadmap-reflection"><b>Reflect:</b> ${learningSupport.reflection}</div>
+      </div>
+      </section>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — feel free to keep tweaking the code below.</div>' : ''}
       <div class="roadmap-code-toolbar">
         <span>${roadmapFunctionWrapperHidden ? 'Beginner view: focus on the code inside.' : 'Function view: see the complete function.'}</span>
@@ -582,6 +744,17 @@ function loadRoadmapLesson(idx){
       <div class="roadmap-terminal" id="roadmapTerminal">
         <div class="term-line term-dim">Write your answer above, then hit Run.</div>
       </div>
+      </section>
+      <aside class="roadmap-explanation">
+        <div class="rp-head">
+          <span class="rp-diff ${lesson.level}">${LEVEL_LABELS[lesson.level]}</span>
+          <div class="rp-title">${lesson.title}</div>
+        </div>
+        <div class="roadmap-explanation-body">
+          <div class="roadmap-explanation-label">CONCEPT</div>
+          ${lesson.content}
+        </div>
+      </aside>
     </div>
   `;
 
@@ -595,6 +768,30 @@ function loadRoadmapLesson(idx){
   });
 
   const roadmapCodeInputEl = document.getElementById('roadmapCodeInput');
+  const hintsEl = document.getElementById('roadmapHints');
+  const hintBtn = document.getElementById('roadmapHintBtn');
+  const hintProgress = document.getElementById('roadmapHintProgress');
+  let hintCount = 0;
+  hintBtn.addEventListener('click', ()=>{
+    if(hintCount >= learningSupport.hints.length) return;
+    const hint = document.createElement('div');
+    hint.className = 'roadmap-hint';
+    hint.innerHTML = `<b>Hint ${hintCount + 1}</b>${learningSupport.hints[hintCount]}`;
+    hintsEl.appendChild(hint);
+    hintCount++;
+    hintBtn.textContent = hintCount < learningSupport.hints.length
+      ? `Show hint ${hintCount + 1}`
+      : 'All hints shown';
+    hintBtn.disabled = hintCount >= learningSupport.hints.length;
+    hintProgress.textContent = `${hintCount} of ${learningSupport.hints.length} hints shown`;
+  });
+  document.getElementById('roadmapSolutionCode').innerHTML = highlightCode(solutionForDisplay);
+  document.getElementById('roadmapUseSolution').addEventListener('click', ()=>{
+    roadmapCodeInputEl.value = solutionForDisplay;
+    updateRoadmapGutter();
+    refreshRoadmapHighlight();
+    roadmapCodeInputEl.focus();
+  });
   updateRoadmapGutter();
   refreshRoadmapHighlight();
 
@@ -750,14 +947,18 @@ function unwrapRoadmapFunction(source){
   const opening = source.indexOf('{');
   const closing = source.lastIndexOf('}');
   if(opening < 0 || closing <= opening) return source;
-  return source.slice(opening + 1, closing).replace(/^\n|\n$/g, '');
+  const body = source.slice(opening + 1, closing).replace(/^\n|\n$/g, '');
+  // The wrapper adds one two-space indentation level. Remove exactly that
+  // level in beginner view so the code reads as standalone JavaScript.
+  return body.split('\n').map(line => line.startsWith('  ') ? line.slice(2) : line).join('\n');
 }
 
 function wrapRoadmapFunction(body, lesson){
   const opening = lesson.starter.indexOf('{');
   if(opening < 0) return body;
   const signature = lesson.starter.slice(0, opening + 1);
-  return `${signature}\n${body}\n}`;
+  const nestedBody = body.split('\n').map(line => line ? '  ' + line : line).join('\n');
+  return `${signature}\n${nestedBody}\n}`;
 }
 
 function isRoadmapFunctionWrapped(code, lesson){

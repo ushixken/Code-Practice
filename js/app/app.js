@@ -623,7 +623,7 @@ const ROADMAP = [
     summary: "Use math operators to calculate values",
     content: `
       <p>Operators let JavaScript do math. Start with <code>+</code> to add, <code>-</code> to subtract, <code>*</code> to multiply, and <code>/</code> to divide.</p>
-      <div class="example"><b>const total = 8 + 4;<br>console.log(total); // 12</b></div>
+      <div class="example"><b>const total = 8 + 4;<br>console.log(total);</b><br>→ 12</div>
       <p>You will learn comparisons such as <code>===</code> and <code>>=</code> in the next step, when they help programs make decisions.</p>
     `,
     fnName: "isAdult",
@@ -659,7 +659,7 @@ const ROADMAP = [
     content: `
       <p>A comparison asks a true/false question. Use <code>===</code> to check whether two values are the same, and <code>>=</code> to check whether one number is at least another.</p>
       <p><code>if</code>/<code>else</code> uses that true/false answer to choose a path. Chain <code>else if</code> for multiple choices.</p>
-      <div class="example"><b>if (x > 10) { ... } else if (x > 5) { ... } else { ... }</b></div>
+      <div class="example"><b>if (score >= 10) {<br>&nbsp;&nbsp;console.log("High score");<br>} else {<br>&nbsp;&nbsp;console.log("Keep practicing");<br>}</b></div>
     `,
     fnName: "trafficAction",
     starter:
@@ -694,7 +694,7 @@ const ROADMAP = [
     summary: "Declarations, parameters, and return values",
     content: `
       <p>A function packages up reusable logic. It takes <b>parameters</b> as input and can send a value back with <code>return</code> — once <code>return</code> runs, the function stops immediately.</p>
-      <div class="example"><b>function add(a, b) { return a + b; }</b></div>
+      <div class="example"><b>function add(a, b) {<br>&nbsp;&nbsp;return a + b;<br>}<br><br>console.log(add(2, 3));</b><br>→ 5</div>
       <p>Call a function with parentheses, such as <code>add(2, 3)</code>. You will meet shorter function syntax later, after this form feels comfortable.</p>
     `,
     fnName: "greet",
@@ -713,7 +713,7 @@ const ROADMAP = [
     summary: "A shorter way to write a function you already understand",
     content: `
       <p>An <b>arrow function</b> is shorter syntax for a function. It still accepts input and can give a result back; only the writing style changes.</p>
-      <div class="example"><b>const double = number =&gt; number * 2;<br>double(4); // 8</b></div>
+      <div class="example"><b>const double = number =&gt; {<br>&nbsp;&nbsp;return number * 2;<br>};<br><br>console.log(double(4));</b><br>→ 8</div>
       <p>Learn the regular <code>function</code> form first. Then arrows become a shortcut, not a new mystery.</p>
     `,
     fnName: "triple",
@@ -783,7 +783,7 @@ const ROADMAP = [
       "Use loops, conditions, and the remainder operator in one practical challenge",
     content: `
       <p><b>FizzBuzz</b> is a classic interview question because it checks whether you can combine a loop, conditions, and clear ordering.</p>
-      <div class="example"><b>for (let i = 1; i &lt;= 4; i++) {<br>&nbsp;&nbsp;if (i % 2 === 0) console.log("even");<br>&nbsp;&nbsp;else console.log("odd");<br>}</b></div>
+      <div class="example"><b>for (let i = 1; i &lt;= 4; i++) {<br>&nbsp;&nbsp;if (i % 2 === 0) {<br>&nbsp;&nbsp;&nbsp;&nbsp;console.log("even");<br>&nbsp;&nbsp;} else {<br>&nbsp;&nbsp;&nbsp;&nbsp;console.log("odd");<br>&nbsp;&nbsp;}<br>}</b></div>
       <p>Check <code>15</code> first because a number divisible by both 3 and 5 must become <code>"FizzBuzz"</code>, not just <code>"Fizz"</code>. This is the same skill you use when ordering real validation rules.</p>
     `,
     fnName: "fizzBuzz",
@@ -866,7 +866,7 @@ const ROADMAP = [
     summary: "Lexical scope and functions that remember variables",
     content: `
       <p>A <b>closure</b> is a function that "remembers" variables from the scope it was created in, even after that outer function has finished running.</p>
-      <div class="example"><b>function makePrefix(prefix) { return text => prefix + text; }</b><br>const warn = makePrefix("Warning: ");<br>warn("Low battery") // "Warning: Low battery"</div>
+      <div class="example"><b>function makePrefix(prefix) {<br>&nbsp;&nbsp;return text =&gt; prefix + text;<br>}<br><br>const warn = makePrefix("Warning: ");<br>console.log(warn("Low battery"));</b><br>→ Warning: Low battery</div>
     `,
     fnName: "multiplyBy",
     starter:
@@ -904,8 +904,8 @@ const ROADMAP = [
     summary: "Transforming arrays without manual loops",
     content: `
       <p><code>arr.map(fn)</code> returns a new array with <code>fn</code> applied to every element. <code>arr.filter(fn)</code> returns a new array keeping only elements where <code>fn</code> returns true.</p>
-      <div class="example"><b>[1,2,3].map(n => n * n)</b> → [1, 4, 9]</div>
-      <div class="example"><b>[4,10,15].filter(n => n >= 10)</b> → [10, 15]</div>
+      <div class="example"><b>const numbers = [1, 2, 3];<br>const squares = numbers.map(number =&gt; number * number);<br>console.log(squares);</b><br>→ [1, 4, 9]</div>
+      <div class="example"><b>const scores = [4, 10, 15];<br>const passing = scores.filter(score =&gt; score >= 10);<br>console.log(passing);</b><br>→ [10, 15]</div>
     `,
     fnName: "doubleAll",
     starter:
@@ -950,7 +950,7 @@ const ROADMAP = [
     summary: "Working with values that resolve later",
     content: `
       <p>A <b>Promise</b> represents a value that isn't ready yet — like data from a network request. <code>async</code> functions let you write <code>await somePromise</code> to pause until it resolves, instead of chaining <code>.then()</code>.</p>
-      <div class="example"><b>async function run() { const val = await fetchData(); }</b></div>
+      <div class="example"><b>async function run() {<br>&nbsp;&nbsp;const value = await fetchData();<br>&nbsp;&nbsp;console.log(value);<br>}</b></div>
     `,
     fnName: "delayedDouble",
     starter:
@@ -981,7 +981,7 @@ const ROADMAP = [
     summary: "Check and transform text with helpful built-in methods",
     content: `
       <p>Strings have useful built-in methods. For example, <code>text.includes("@")</code> checks whether text contains a character, and <code>text.toUpperCase()</code> creates uppercase text.</p>
-      <div class="example"><b>"JavaScript".includes("Script") // true</b></div>
+      <div class="example"><b>const topic = "JavaScript";<br>const hasScript = topic.includes("Script");<br>console.log(hasScript);</b><br>→ true</div>
       <p>Methods use a dot because they belong to the value on their left. They do not change the original string unless you store the new result.</p>
     `,
     fnName: "hasAtSign",
@@ -1002,7 +1002,7 @@ const ROADMAP = [
     summary: "Make a web page respond to the user",
     content: `
       <p>The <b>DOM</b> is JavaScript’s view of a web page. Use <code>document.querySelector()</code> to find an element, then update <code>textContent</code>, <code>classList</code>, or attach an event listener.</p>
-      <div class="example"><b>button.addEventListener('click', () =&gt; {<br>&nbsp;&nbsp;message.textContent = 'Saved!';<br>});</b></div>
+      <div class="example"><b>button.addEventListener("click", () =&gt; {<br>&nbsp;&nbsp;message.textContent = "Saved!";<br>});</b></div>
       <p>Events are how the browser tells your program that something happened: a click, key press, form submission, or input change.</p>
     `,
     fnName: "buttonMessage",
@@ -1022,7 +1022,7 @@ const ROADMAP = [
     summary: "Read user input and give helpful feedback",
     content: `
       <p>Forms turn user input into program data. Read values from inputs, stop unwanted page reloads with <code>event.preventDefault()</code>, then validate before using the data.</p>
-      <div class="example"><b>form.addEventListener("submit", (event) =&gt; {<br>&nbsp;&nbsp;event.preventDefault();<br>&nbsp;&nbsp;if (name === "") showError("Enter your name");<br>});</b></div>
+      <div class="example"><b>form.addEventListener("submit", (event) =&gt; {<br>&nbsp;&nbsp;event.preventDefault();<br>&nbsp;&nbsp;if (name === "") {<br>&nbsp;&nbsp;&nbsp;&nbsp;showError("Enter your name");<br>&nbsp;&nbsp;}<br>});</b></div>
       <p>A useful validation message tells the user exactly what to fix. Build login and registration forms only after you can reliably handle one input.</p>
     `,
     fnName: "isValidEmail",
@@ -1059,7 +1059,7 @@ const ROADMAP = [
     summary: "Use JSON, HTTP, fetch, and error handling",
     content: `
       <p>An API lets your program request data from another service. Most web APIs send JSON. A safe request checks the response before using its data.</p>
-      <div class="example"><b>const response = await fetch("/api/weather");<br>if (!response.ok) throw new Error("Request failed");<br>const data = await response.json();</b></div>
+      <div class="example"><b>async function loadWeather() {<br>&nbsp;&nbsp;const response = await fetch("/api/weather");<br>&nbsp;&nbsp;if (!response.ok) {<br>&nbsp;&nbsp;&nbsp;&nbsp;throw new Error("Request failed");<br>&nbsp;&nbsp;}<br>&nbsp;&nbsp;const data = await response.json();<br>&nbsp;&nbsp;return data;<br>}</b></div>
       <p>Practice with a weather, movie, currency, or GitHub-profile project. Keep network code separate from how you display the result.</p>
     `,
     fnName: "readUserName",
@@ -1093,7 +1093,7 @@ const ROADMAP = [
     summary: "Organize code and handle failures deliberately",
     content: `
       <p>Modules keep files focused. Export a value with <code>export</code>, then use <code>import</code> where it is needed. This prevents large programs from becoming one hard-to-navigate file.</p>
-      <div class="example"><b>export function add(a, b) { return a + b; }<br>import { add } from "./math.js";</b></div>
+      <div class="example"><b>export function add(a, b) {<br>&nbsp;&nbsp;return a + b;<br>}<br><br>import { add } from "./math.js";</b></div>
       <p>Use <code>try/catch</code> around work that can fail, especially network requests and JSON parsing. Give errors useful messages so future you can solve them.</p>
     `,
     fnName: "safeDivide",
@@ -1113,7 +1113,7 @@ const ROADMAP = [
     summary: "Model related data and behavior",
     content: `
       <p>Objects combine related data and behavior. Classes are convenient syntax for creating related objects, while prototypes are the mechanism JavaScript uses to share methods behind the scenes.</p>
-      <div class="example"><b>class User {<br>&nbsp;&nbsp;constructor(name) { this.name = name; }<br>&nbsp;&nbsp;greet() { return 'Hi, ' + this.name; }<br>}</b></div>
+      <div class="example"><b>class User {<br>&nbsp;&nbsp;constructor(name) {<br>&nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>&nbsp;&nbsp;}<br><br>&nbsp;&nbsp;greet() {<br>&nbsp;&nbsp;&nbsp;&nbsp;return "Hi, " + this.name;<br>&nbsp;&nbsp;}<br>}</b></div>
       <p>Learn classes for readability, then study prototypes so <code>this</code>, inheritance, and method sharing make sense in real code.</p>
     `,
     fnName: "getUserName",

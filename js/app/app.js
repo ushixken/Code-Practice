@@ -1155,6 +1155,7 @@ ROADMAP.sort(
 )
 
 let roadmapSolved = new Set()
+let roadmapPracticalSolved = new Set()
 let currentRoadmapIdx = 0
 let roadmapRanOnce = false
 let roadmapFunctionWrapperHidden = false
@@ -1173,7 +1174,7 @@ let roadmapLevelFilter = "all"
 
 function isRoadmapLessonLocked(idx) {
   if (idx < 0 || idx >= ROADMAP.length) return true
-  const prevDone = idx === 0 || roadmapSolved.has(ROADMAP[idx - 1].id)
+  const prevDone = idx === 0 || roadmapPracticalSolved.has(ROADMAP[idx - 1].id)
   const isDone = roadmapSolved.has(ROADMAP[idx].id)
   return !prevDone && !isDone
 }
@@ -1412,7 +1413,7 @@ function loadRoadmapLesson(idx) {
   })
   document.getElementById("roadmapNextBtn").addEventListener("click", () => {
     if (!roadmapSolved.has(lesson.id)) return
-    if (activeRoadmapPractical && !activeRoadmapPractical.passed) {
+    if (roadmapPracticalsFor(lesson.id).length && !roadmapPracticalSolved.has(lesson.id)) {
       showPracticalAdvanceError()
       return
     }
@@ -1898,6 +1899,10 @@ async function runActiveRoadmapPractical(code) {
   const expectedOutput = activeRoadmapPractical.practical.expectedOutput
   const isCorrect = JSON.stringify(result.output) === JSON.stringify(expectedOutput)
   activeRoadmapPractical.passed = isCorrect
+  if (isCorrect) {
+    roadmapPracticalSolved.add(activeRoadmapPractical.lessonId)
+    buildRoadmapPath()
+  }
   if (result.output.length) {
     terminal.innerHTML = '<div class="term-line term-info">Console output:</div>'
     result.output.forEach((line) => {
@@ -1926,7 +1931,7 @@ function showPracticalAdvanceError() {
   if (!terminal) return
   const errorLine = document.createElement("div")
   errorLine.className = "term-line term-fail"
-  errorLine.textContent = "✗ Finish this practical with the correct output before trying another one."
+  errorLine.textContent = "✗ Finish this practical with the correct output before the next lesson unlocks."
   terminal.appendChild(errorLine)
 }
 

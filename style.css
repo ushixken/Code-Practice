@@ -775,6 +775,10 @@ body {
   overflow: hidden;
   margin-bottom: 10px;
 }
+.roadmap-editor-wrap:focus-within {
+  border-color: var(--line);
+  box-shadow: none;
+}
 .roadmap-gutter {
   width: 40px;
   flex-shrink: 0;
@@ -826,6 +830,17 @@ body {
   outline: none;
   resize: none;
 }
+#roadmapCodeInput:focus,
+#roadmapCodeInput:focus-visible {
+  outline: none;
+}
+.roadmap-view button:focus,
+.roadmap-view button:focus-visible,
+.roadmap-view summary:focus,
+.roadmap-view summary:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 #roadmapCodeInput::selection {
   background: rgba(139, 196, 114, 0.35);
   color: transparent;
@@ -835,6 +850,22 @@ body {
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
+}
+.roadmap-next-btn {
+  border: 1px solid var(--accent-dim);
+  border-radius: 5px;
+  padding: 7px 12px;
+  background: rgba(139, 196, 114, 0.12);
+  color: var(--accent);
+  font: 12px var(--mono);
+  cursor: pointer;
+}
+.roadmap-next-btn:hover:not(:disabled) {
+  background: rgba(139, 196, 114, 0.22);
+}
+.roadmap-next-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 .roadmap-skip-btn {
   background: none;

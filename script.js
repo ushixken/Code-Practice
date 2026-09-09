@@ -832,7 +832,7 @@ function loadRoadmapLesson(idx){
         <div class="roadmap-gutter" id="roadmapGutter">1</div>
         <div class="roadmap-code-area">
           <pre id="roadmapHighlightLayer"></pre>
-          <textarea id="roadmapCodeInput" spellcheck="false">${starterForDisplay}</textarea>
+          <textarea id="roadmapCodeInput" spellcheck="false" tabindex="0" aria-label="JavaScript code editor">${starterForDisplay}</textarea>
         </div>
       </div>
       <div class="roadmap-actions">
@@ -841,6 +841,7 @@ function loadRoadmapLesson(idx){
           Run
         </button>
         <button class="reset-btn" id="roadmapResetBtn">Reset</button>
+        <button class="roadmap-next-btn" id="roadmapNextBtn" type="button" ${isDone ? '' : 'disabled'}>Next</button>
         <button class="roadmap-skip-btn" id="roadmapSkipBtn">Already know this — mark as mastered</button>
       </div>
       <div class="roadmap-terminal" id="roadmapTerminal">
@@ -908,6 +909,11 @@ function loadRoadmapLesson(idx){
     refreshRoadmapHighlight();
     roadmapRanOnce = false;
     roadmapCodeInputEl.focus();
+  });
+  document.getElementById('roadmapNextBtn').addEventListener('click', ()=>{
+    if(!roadmapSolved.has(lesson.id)) return;
+    const nextIdx = currentRoadmapIdx + 1;
+    if(nextIdx < ROADMAP.length) loadRoadmapLesson(nextIdx);
   });
   document.getElementById('roadmapSkipBtn').addEventListener('click', ()=>{
     markRoadmapComplete(lesson.id);
@@ -1112,6 +1118,10 @@ function markRoadmapComplete(lessonId){
   if(!wasAlreadySolved && ROADMAP[currentRoadmapIdx] && ROADMAP[currentRoadmapIdx].id === lessonId){
     showRoadmapMasteredBanner();
   }
+  const nextButton = document.getElementById('roadmapNextBtn');
+  if(nextButton && ROADMAP[currentRoadmapIdx] && ROADMAP[currentRoadmapIdx].id === lessonId){
+    nextButton.disabled = false;
+  }
 }
 
 function showRoadmapMasteredBanner(){
@@ -1229,6 +1239,19 @@ roadmapLevelSelect.addEventListener('change', ()=>{
   }
   buildRoadmapPath();
   if(ROADMAP[currentRoadmapIdx]) loadRoadmapLesson(currentRoadmapIdx);
+});
+
+// Tab should not walk through the lesson controls. It jumps directly to the
+// editor, where Tab continues to indent code as usual.
+document.addEventListener('keydown', (event) => {
+  if(!mainEl.classList.contains('view-roadmap')) return;
+  const editor = document.getElementById('roadmapCodeInput');
+  const isEditor = event.target === editor;
+
+  if(event.key === 'Tab' && !isEditor){
+    event.preventDefault();
+    if(editor) editor.focus();
+  }
 });
 
 /* ============ LEVELS (course map) ============ */

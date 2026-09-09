@@ -130,8 +130,8 @@ window.ROADMAP_PRACTICALS = {
   domEvents: [
     {
       title: "React to a click",
-      prompt: "Connect a button click to a console message.",
-      code: 'button.addEventListener("click", () => {\n  console.log("Button clicked");\n});',
+      prompt: "Scenario: while testing a click handler, print \"Button clicked\" to the console.",
+      code: 'console.log("Button clicked");',
     },
   ],
   formsValidation: [
@@ -144,8 +144,8 @@ window.ROADMAP_PRACTICALS = {
   async: [
     {
       title: "Wait for a result",
-      prompt: "Use async and await with a Promise.",
-      code: 'async function showMessage() {\n  const message = await Promise.resolve("Loaded");\n  console.log(message);\n}',
+      prompt: "Scenario: data finished loading. Use a Promise to print \"Loaded\" when it resolves.",
+      code: 'return Promise.resolve("Loaded").then(message => console.log(message));',
     },
   ],
   modulesErrors: [
@@ -165,7 +165,7 @@ window.ROADMAP_PRACTICALS = {
   browserStorage: [
     {
       title: "Save a preference",
-      prompt: "Save a small setting in the browser.",
+      prompt: "Scenario: save the theme \"dark\" in browser storage, then print the saved theme.",
       code: 'localStorage.setItem("theme", "dark");\nconsole.log(localStorage.getItem("theme"));',
     },
   ],
@@ -179,15 +179,15 @@ window.ROADMAP_PRACTICALS = {
   foundationProjects: [
     {
       title: "Plan a small app",
-      prompt: "Write the first three tasks for a todo app before coding it.",
-      code: "// 1. Show an input\n// 2. Add a task to a list\n// 3. Mark a task complete",
+      prompt: "Scenario: before coding a todo app, print its first step: \"Show an input\".",
+      code: 'console.log("Show an input");',
     },
   ],
   professionalPractice: [
     {
       title: "Test a utility",
-      prompt: "Write a small test for a function you created.",
-      code: "const add = (a, b) => a + b;\nexpect(add(2, 3)).toBe(5);",
+      prompt: "Scenario: test your add function by printing the result of 2 plus 3.",
+      code: "const add = (a, b) => a + b;\nconsole.log(add(2, 3));",
     },
   ],
 }

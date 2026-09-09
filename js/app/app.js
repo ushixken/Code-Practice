@@ -1845,33 +1845,55 @@ async function runRoadmapCode() {
   }
 }
 
-function runActiveRoadmapPractical(code) {
+async function runActiveRoadmapPractical(code) {
   const terminal = document.getElementById("roadmapTerminal")
   terminal.innerHTML = ""
-  const output = []
-  const originalLog = console.log
-  console.log = (...values) => output.push(values.join(" "))
-  try {
-    new Function(code)()
-    if (output.length) {
-      terminal.innerHTML = '<div class="term-line term-info">Console output:</div>'
-      output.forEach((line) => {
-        const result = document.createElement("div")
-        result.className = "term-line term-pass"
-        result.textContent = "  " + line
-        terminal.appendChild(result)
-      })
-    } else {
-      terminal.innerHTML = '<div class="term-line term-dim">Your code ran. Add console.log(...) if you want to inspect a result here.</div>'
+  const runSource = async (source) => {
+    const output = []
+    const originalLog = console.log
+    console.log = (...values) => output.push(values.join(" "))
+    try {
+      await new Function(source)()
+      return { output }
+    } catch (error) {
+      return { output, error }
+    } finally {
+      console.log = originalLog
     }
-  } catch (error) {
+  }
+
+  const expected = await runSource(activeRoadmapPractical.practical.code)
+  const result = await runSource(code)
+  if (result.error) {
     terminal.innerHTML = '<div class="term-line term-fail">✗ Your practical code failed to run:</div>'
-    const result = document.createElement("div")
-    result.className = "term-line term-fail"
-    result.textContent = "  " + error.message
-    terminal.appendChild(result)
-  } finally {
-    console.log = originalLog
+    const errorLine = document.createElement("div")
+    errorLine.className = "term-line term-fail"
+    errorLine.textContent = "  " + result.error.message
+    terminal.appendChild(errorLine)
+    return
+  }
+
+  const isCorrect = JSON.stringify(result.output) === JSON.stringify(expected.output)
+  if (result.output.length) {
+    terminal.innerHTML = '<div class="term-line term-info">Console output:</div>'
+    result.output.forEach((line) => {
+      const resultLine = document.createElement("div")
+      resultLine.className = "term-line " + (isCorrect ? "term-pass" : "term-info")
+      resultLine.textContent = "  " + line
+      terminal.appendChild(resultLine)
+    })
+  }
+  const checkLine = document.createElement("div")
+  checkLine.className = "term-line " + (isCorrect ? "term-pass" : "term-fail")
+  checkLine.textContent = isCorrect
+    ? "✓ Correct — your practical solution produced the expected result."
+    : "✗ Not quite — check the scenario and try again."
+  terminal.appendChild(checkLine)
+  if (!isCorrect && expected.output.length) {
+    const expectedLine = document.createElement("div")
+    expectedLine.className = "term-line term-dim"
+    expectedLine.textContent = "Expected console output: " + expected.output.join(" | ")
+    terminal.appendChild(expectedLine)
   }
 }
 

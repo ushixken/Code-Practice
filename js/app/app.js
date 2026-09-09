@@ -501,9 +501,9 @@ const ROADMAP = [
     title: "Variables in Practice",
     summary: "Use const to store a value, then print it with console.log()",
     content: `
-      <p>Now that you know <code>const</code>, practice using it to store one value with one clear name.</p>
+      <p>You just learned <code>let</code> and <code>const</code>. Now practice using <code>const</code> to store one value with one clear name.</p>
       <div class="example"><b>const city = "Manila";<br>console.log(city);</b></div>
-      <p>Use <code>const</code> when the value will stay the same. The word <code>city</code> is a name we chose; it helps us remember what the value means. Later, you will learn when to use <code>let</code> for values that change.</p>
+      <p>Use <code>const</code> when the value will stay the same, and <code>let</code> when it needs to change. The word <code>city</code> is a name we chose; it helps us remember what the value means.</p>
     `,
     fnName: "firstVariable",
     starter:

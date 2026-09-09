@@ -62,7 +62,9 @@
   border: 1px solid #4d6280;
   border-radius: 10px;
   background: linear-gradient(145deg, #292c33, #202124);
-  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.58), inset 0 1px rgba(255,255,255,.04);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.58),
+    inset 0 1px rgba(255, 255, 255, 0.04);
   color: #e7e7e7;
 }
 .planner-arrow-label-icon {
@@ -79,7 +81,9 @@
   display: block;
   padding-top: 2px;
   color: #b9dfff;
-  font: 600 13px "JetBrains Mono", monospace;
+  font:
+    600 13px "JetBrains Mono",
+    monospace;
 }
 .planner-arrow-label-card p {
   margin: 5px 0 14px;
@@ -100,7 +104,9 @@
   border-radius: 6px;
   background: #17191d;
   color: #f1f4f8;
-  font: 12px "JetBrains Mono", monospace;
+  font:
+    12px "JetBrains Mono",
+    monospace;
   outline: none;
 }
 .planner-arrow-label-input:focus {
@@ -121,7 +127,9 @@
   background: #2a313b;
   color: #c8d6e5;
   cursor: pointer;
-  font: 11px "JetBrains Mono", monospace;
+  font:
+    11px "JetBrains Mono",
+    monospace;
 }
 .planner-arrow-label-actions button[data-arrow-label-action="save"] {
   border-color: #6ab0f3;
@@ -161,7 +169,9 @@
   background: #303030;
   color: #ddd;
   cursor: pointer;
-  font: 11px "JetBrains Mono", monospace;
+  font:
+    11px "JetBrains Mono",
+    monospace;
 }
 .planner-template-modal-actions button:hover {
   border-color: #e3a13f;
@@ -344,7 +354,9 @@
   background: #1c1c1c;
   border-bottom: 1px solid #2d2d2d;
   color: #aaa;
-  font: 10.5px/1.4 "JetBrains Mono", monospace;
+  font:
+    10.5px/1.4 "JetBrains Mono",
+    monospace;
 }
 .planner-node-guide.open {
   display: grid;
@@ -432,7 +444,9 @@
   border-radius: 4px;
   background: rgba(24, 35, 46, 0.92);
   color: #b9ddfa;
-  font: 10px "JetBrains Mono", monospace;
+  font:
+    10px "JetBrains Mono",
+    monospace;
   white-space: nowrap;
 }
 .pnode:active {
@@ -607,7 +621,9 @@
   background: #1f2b36;
   border-color: #4b8cb5;
   border-radius: 8px;
-  box-shadow: inset 4px 0 0 #4b8cb5, 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 4px 0 0 #4b8cb5,
+    0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .pnode[data-type="task"] {

@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>drills — practice coding problems</title>
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="planner.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/planner.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -12,9 +12,13 @@
       rel="stylesheet"
     />
 
-    <script src="roadmap/lesson-practicals.js" defer></script>
-    <script src="script.js" defer></script>
-    <script src="planner.js" defer></script>
+    <script src="js/roadmap/content/lesson-practicals.js" defer></script>
+    <script src="js/shared/editor-tools.js" defer></script>
+    <script src="js/roadmap/course-order.js" defer></script>
+    <script src="js/roadmap/practical-renderer.js" defer></script>
+    <script src="js/app/app.js" defer></script>
+    <script src="js/planner/config.js" defer></script>
+    <script src="js/planner/planner.js" defer></script>
   </head>
   <body>
     <div id="app">
@@ -208,13 +212,18 @@
           <div class="roadmap-path">
             <div class="roadmap-path-head">
               <div class="sidebar-head">JAVASCRIPT FOUNDATION TRACK</div>
-              <div class="roadmap-track-copy">Beginner → strong intermediate<br>Learn, practice, build, and reflect.</div>
+              <div class="roadmap-track-copy">
+                Beginner → strong intermediate<br />Learn, practice, build, and
+                reflect.
+              </div>
               <div class="roadmap-level-wrap">
                 <label for="roadmapLevelSelect">Learning level</label>
                 <select id="roadmapLevelSelect" class="roadmap-level-select">
                   <option value="all">Complete foundation path</option>
                   <option value="easy">Start — fundamentals & logic</option>
-                  <option value="medium">Build — functions, data & browser</option>
+                  <option value="medium">
+                    Build — functions, data & browser
+                  </option>
                   <option value="hard">Ship — async, APIs & projects</option>
                 </select>
               </div>

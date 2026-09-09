@@ -979,6 +979,9 @@ body {
   border-color: var(--accent-dim);
   background: rgba(139, 196, 114, 0.08);
 }
+.roadmap-practical-library.is-practicing .roadmap-practical-start {
+  display: none;
+}
 
 /* ===== Right panel: problem description ===== */
 .rightpanel {

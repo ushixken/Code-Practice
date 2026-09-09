@@ -1897,7 +1897,23 @@ async function runActiveRoadmapPractical(code) {
   }
 
   const expectedOutput = activeRoadmapPractical.practical.expectedOutput
-  const isCorrect = JSON.stringify(result.output) === JSON.stringify(expectedOutput)
+  const outputMatches = JSON.stringify(result.output) === JSON.stringify(expectedOutput)
+
+  // Output alone isn't proof the scenario's instructions were followed
+  // (e.g. printing "Sam" from a bare string literal instead of a constant).
+  // Run every declared requirement against the submitted source too.
+  const requirements = activeRoadmapPractical.practical.requirements || []
+  const failedRequirements = requirements
+    .filter((requirement) => {
+      try {
+        return !requirement.test(code)
+      } catch (error) {
+        return true
+      }
+    })
+    .map((requirement) => requirement.message)
+
+  const isCorrect = outputMatches && failedRequirements.length === 0
   activeRoadmapPractical.passed = isCorrect
   if (isCorrect) {
     roadmapPracticalSolved.add(activeRoadmapPractical.lessonId)
@@ -1916,9 +1932,19 @@ async function runActiveRoadmapPractical(code) {
   checkLine.className = "term-line " + (isCorrect ? "term-pass" : "term-fail")
   checkLine.textContent = isCorrect
     ? "✓ Correct practical output — your solution produced the expected result."
-    : "✗ Not quite — check the scenario and try again."
+    : outputMatches
+      ? "✗ Right output, wrong approach — this scenario asks for a specific technique."
+      : "✗ Not quite — check the scenario and try again."
   terminal.appendChild(checkLine)
-  if (!isCorrect && expectedOutput.length) {
+  if (!isCorrect && failedRequirements.length) {
+    failedRequirements.forEach((message) => {
+      const reqLine = document.createElement("div")
+      reqLine.className = "term-line term-fail"
+      reqLine.textContent = "  • " + message
+      terminal.appendChild(reqLine)
+    })
+  }
+  if (!isCorrect && !outputMatches && expectedOutput.length) {
     const expectedLine = document.createElement("div")
     expectedLine.className = "term-line term-dim"
     expectedLine.textContent = "Expected console output: " + expectedOutput.join(" | ")

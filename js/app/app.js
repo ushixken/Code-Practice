@@ -1408,10 +1408,14 @@ function loadRoadmapLesson(idx) {
     roadmapCodeInputEl.focus()
   })
   document.getElementById("roadmapTryAnotherBtn").addEventListener("click", () => {
-    startRoadmapPractical(activeRoadmapPractical?.lessonId, activeRoadmapPractical?.index + 1)
+    startRoadmapPractical(activeRoadmapPractical?.lessonId, activeRoadmapPractical?.index)
   })
   document.getElementById("roadmapNextBtn").addEventListener("click", () => {
     if (!roadmapSolved.has(lesson.id)) return
+    if (activeRoadmapPractical && !activeRoadmapPractical.passed) {
+      showPracticalAdvanceError()
+      return
+    }
     const nextIdx = currentRoadmapIdx + 1
     if (nextIdx < ROADMAP.length) loadRoadmapLesson(nextIdx)
   })
@@ -1423,6 +1427,7 @@ function loadRoadmapLesson(idx) {
     updateRoadmapGutter()
     refreshRoadmapHighlight()
     roadmapRanOnce = false
+    if (activeRoadmapPractical) activeRoadmapPractical.passed = false
   })
   roadmapCodeInputEl.addEventListener("scroll", () => {
     document.getElementById("roadmapGutter").scrollTop =
@@ -1448,10 +1453,22 @@ function loadRoadmapLesson(idx) {
       return
     }
 
-    // Run shortcut — press once to run, press again (without editing) to advance
+    // Run a workspace first. After the main workspace passes, the next
+    // Ctrl+Enter opens its practical rather than skipping straight to a lesson.
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault()
-      if (roadmapRanOnce) {
+      if (activeRoadmapPractical) {
+        if (activeRoadmapPractical.passed) {
+          const nextIdx = currentRoadmapIdx + 1
+          if (nextIdx < ROADMAP.length) loadRoadmapLesson(nextIdx)
+        } else {
+          runRoadmapCode()
+        }
+      } else if (roadmapRanOnce && roadmapSolved.has(lesson.id)) {
+        if (roadmapPracticalsFor(lesson.id).length) {
+          startRoadmapPractical(lesson.id)
+          return
+        }
         const nextIdx = currentRoadmapIdx + 1
         if (nextIdx >= ROADMAP.length) {
           return
@@ -1711,7 +1728,7 @@ function startRoadmapPractical(lessonId, index = 0) {
   if (!practicals.length) return
   const nextIndex = index >= practicals.length ? 0 : index
   const practical = practicals[nextIndex]
-  activeRoadmapPractical = { lessonId, index: nextIndex, practical }
+  activeRoadmapPractical = { lessonId, index: nextIndex, practical, passed: false }
   const practiceSection = roadmapDetailEl.querySelector(".roadmap-practice")
   if (practiceSection) practiceSection.hidden = true
   const practicalLibrary = roadmapDetailEl.querySelector(".roadmap-practical-library")
@@ -1869,6 +1886,7 @@ async function runActiveRoadmapPractical(code) {
 
   const result = await runSource(code)
   if (result.error) {
+    activeRoadmapPractical.passed = false
     terminal.innerHTML = '<div class="term-line term-fail">✗ Your practical code failed to run:</div>'
     const errorLine = document.createElement("div")
     errorLine.className = "term-line term-fail"
@@ -1879,6 +1897,7 @@ async function runActiveRoadmapPractical(code) {
 
   const expectedOutput = activeRoadmapPractical.practical.expectedOutput
   const isCorrect = JSON.stringify(result.output) === JSON.stringify(expectedOutput)
+  activeRoadmapPractical.passed = isCorrect
   if (result.output.length) {
     terminal.innerHTML = '<div class="term-line term-info">Console output:</div>'
     result.output.forEach((line) => {
@@ -1900,6 +1919,15 @@ async function runActiveRoadmapPractical(code) {
     expectedLine.textContent = "Expected console output: " + expectedOutput.join(" | ")
     terminal.appendChild(expectedLine)
   }
+}
+
+function showPracticalAdvanceError() {
+  const terminal = document.getElementById("roadmapTerminal")
+  if (!terminal) return
+  const errorLine = document.createElement("div")
+  errorLine.className = "term-line term-fail"
+  errorLine.textContent = "✗ Finish this practical with the correct output before trying another one."
+  terminal.appendChild(errorLine)
 }
 
 problemsBtn.addEventListener("click", () => {

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>drills — practice coding problems</title>
+    <link rel="stylesheet" href="style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div id="app">
+      <div class="titlebar">
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="name">
+          drills — <b id="currentProbName">notString.js</b>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="activitybar">
+          <button class="active" title="Problems">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M4 4h16v16H4z" />
+              <path d="M4 9h16" />
+            </svg>
+          </button>
+          <button title="Progress" id="statsBtn">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path d="M3 20h18" />
+              <path d="M6 20V10" />
+              <path d="M12 20V4" />
+              <path d="M18 20v14" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="sidebar">
+          <div class="sidebar-head">PROBLEMS</div>
+          <div class="progress-wrap">
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                id="progressFill"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div class="progress-label" id="progressLabel">0 / 0 solved</div>
+          </div>
+          <div class="tree" id="tree"></div>
+        </div>
+
+        <div class="editor-col">
+          <div class="tabs">
+            <div class="tab modified" id="tabEl">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#e3a13f"
+                stroke-width="2"
+              >
+                <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" />
+              </svg>
+              <span id="tabName">notString.js</span>
+              <span class="dotmod"></span>
+            </div>
+          </div>
+
+          <div class="run-btn-row">
+            <button class="nav-btn" id="prevBtn" title="Previous problem">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button class="nav-btn" id="nextBtn" title="Next problem">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+            <button class="run-btn" id="runBtn">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              Run Tests
+            </button>
+            <button class="reset-btn" id="resetBtn">Reset</button>
+
+            <div class="spacer"></div>
+            <span class="kbd-hint">⌘/Ctrl + Enter to run</span>
+          </div>
+
+          <div class="editor-terminal-split">
+            <div class="editor-wrap">
+              <div class="gutter" id="gutter">1</div>
+              <div class="code-area">
+                <pre id="highlightLayer"></pre>
+                <textarea id="codeInput" spellcheck="false"></textarea>
+              </div>
+            </div>
+
+            <div class="terminal" id="terminal">
+              <div class="resize-handle" id="resizeHandle"></div>
+              <div class="terminal-head" id="terminalToggle">
+                <span class="chev" id="termChev">
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </span>
+                <span class="ttitle">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M4 17l6-6-6-6M12 19h8" />
+                  </svg>
+                  TERMINAL
+                </span>
+              </div>
+              <div class="terminal-body" id="terminalBody">
+                <div class="term-line term-dim">
+                  Write your solution, then hit Run Tests (or ⌘/Ctrl + Enter).
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rightpanel">
+          <div class="rp-head">
+            <span class="rp-diff easy" id="rpDiff">EASY</span>
+            <div class="rp-title" id="rpTitle">notString</div>
+          </div>
+          <div class="rp-body" id="rpBody"></div>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <div class="sb-left">
+          <span id="sbBranch">⎇ main</span>
+          <span id="sbStatus">● ready</span>
+        </div>
+        <div class="sb-right">
+          <span>JavaScript</span>
+          <span>UTF-8</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

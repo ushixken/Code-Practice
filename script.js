@@ -175,7 +175,6 @@ const ROADMAP = [
       <p>In a browser, JavaScript runs in the page. In Node.js, it runs on your computer. The language is the same; the environment gives it different tools.</p>
       <div class="example"><b>console.log("JavaScript is ready!");</b><br>→ JavaScript is ready!</div>
       <p>Use <code>console.log()</code> to inspect values while learning and debugging. It is the quickest way to ask: “What is my code doing right now?”</p>
-      <div class="roadmap-runner-note"><b>Why is there a function switch?</b> JavaScript can run <code>console.log()</code> by itself in the browser console or a <code>.js</code> file. This learning app uses a function behind the scenes only so it can run and check your lesson safely. You do not need to understand functions yet.</div>
     `,
     fnName: 'firstProgram',
     starter: "function firstProgram() {\n  // Type your console.log(...) line below.\n\n}",
@@ -208,7 +207,7 @@ const ROADMAP = [
     summary: 'Type and run a message on your own',
     content: `
       <p>You have seen <code>console.log()</code>. Now type it yourself without a pre-filled answer. This is how you begin building typing confidence.</p>
-      <div class="example"><b>console.log("I can use the console!");</b></div>
+      <div class="example"><b>console.log("Practice makes progress!");</b></div>
       <p>Use the same punctuation: parentheses around the message, double quotes around the text, and a semicolon at the end.</p>
     `,
     fnName: 'consolePractice',
@@ -433,7 +432,7 @@ const ROADMAP = [
     summary: 'Use loops, conditions, and the remainder operator in one practical challenge',
     content: `
       <p><b>FizzBuzz</b> is a classic interview question because it checks whether you can combine a loop, conditions, and clear ordering.</p>
-      <div class="example"><b>for (let i = 1; i &lt;= n; i++) {<br>&nbsp;&nbsp;if (i % 15 === 0) result.push("FizzBuzz");<br>&nbsp;&nbsp;else if (i % 3 === 0) result.push("Fizz");<br>&nbsp;&nbsp;else if (i % 5 === 0) result.push("Buzz");<br>&nbsp;&nbsp;else result.push(i);<br>}</b></div>
+      <div class="example"><b>for (let i = 1; i &lt;= 4; i++) {<br>&nbsp;&nbsp;if (i % 2 === 0) console.log("even");<br>&nbsp;&nbsp;else console.log("odd");<br>}</b></div>
       <p>Check <code>15</code> first because a number divisible by both 3 and 5 must become <code>"FizzBuzz"</code>, not just <code>"Fizz"</code>. This is the same skill you use when ordering real validation rules.</p>
     `,
     fnName: 'fizzBuzz',
@@ -452,7 +451,7 @@ const ROADMAP = [
     id: 'objects', level: 'medium', title: 'Objects',
     summary: 'Key-value pairs and dot/bracket access',
     content: `
-      <p>Objects group related data as key-value pairs: <code>{ first: "Ada", last: "Lovelace" }</code>. Access a value with dot notation (<code>person.first</code>) or brackets (<code>person["first"]</code>) when the key is dynamic.</p>
+      <p>Objects group related data as key-value pairs: <code>{ title: "Notebook", pages: 80 }</code>. Access a value with dot notation (<code>book.title</code>) or brackets (<code>book["title"]</code>) when the key is dynamic.</p>
     `,
     fnName: 'getFullName',
     starter: 'function getFullName(person) {\n  // person is { first, last }.\n  // Return "First Last".\n\n}',
@@ -480,7 +479,7 @@ const ROADMAP = [
     summary: 'Lexical scope and functions that remember variables',
     content: `
       <p>A <b>closure</b> is a function that "remembers" variables from the scope it was created in, even after that outer function has finished running.</p>
-      <div class="example"><b>function multiplyBy(factor) { return x => x * factor; }</b><br>const double = multiplyBy(2);<br>double(5) // 10 — remembers factor</div>
+      <div class="example"><b>function makePrefix(prefix) { return text => prefix + text; }</b><br>const warn = makePrefix("Warning: ");<br>warn("Low battery") // "Warning: Low battery"</div>
     `,
     fnName: 'multiplyBy',
     starter: 'function multiplyBy(factor) {\n  // Return a function that takes x\n  // and returns x * factor.\n\n}',
@@ -509,8 +508,8 @@ const ROADMAP = [
     summary: 'Transforming arrays without manual loops',
     content: `
       <p><code>arr.map(fn)</code> returns a new array with <code>fn</code> applied to every element. <code>arr.filter(fn)</code> returns a new array keeping only elements where <code>fn</code> returns true.</p>
-      <div class="example"><b>[1,2,3].map(n => n * 2)</b> → [2, 4, 6]</div>
-      <div class="example"><b>[1,2,3].filter(n => n > 1)</b> → [2, 3]</div>
+      <div class="example"><b>[1,2,3].map(n => n * n)</b> → [1, 4, 9]</div>
+      <div class="example"><b>[4,10,15].filter(n => n >= 10)</b> → [10, 15]</div>
     `,
     fnName: 'doubleAll',
     starter: 'function doubleAll(arr) {\n  // Return a new array with every number doubled.\n\n}',
@@ -522,7 +521,7 @@ const ROADMAP = [
     id: 'es6', level: 'hard', title: 'ES6+ (destructuring & spread)',
     summary: 'Modern syntax for pulling values apart and combining them',
     content: `
-      <p><b>Destructuring</b> pulls values out of objects/arrays into variables: <code>const { x, y } = point;</code>. The <b>spread operator</b> (<code>...</code>) expands an array/object into individual elements: <code>[...a, ...b]</code> combines two arrays.</p>
+      <p><b>Destructuring</b> pulls values out of objects/arrays into variables: <code>const { x, y } = point;</code>. The <b>spread operator</b> (<code>...</code>) copies values into a new array or object: <code>{ ...user, role: "admin" }</code> makes a changed copy.</p>
     `,
     fnName: 'combine',
     starter: 'function combine(arr1, arr2) {\n  // Return one array containing all\n  // elements of arr1 followed by arr2,\n  // using the spread operator.\n\n}',
@@ -559,7 +558,7 @@ const ROADMAP = [
     summary: 'Check and transform text with helpful built-in methods',
     content: `
       <p>Strings have useful built-in methods. For example, <code>text.includes("@")</code> checks whether text contains a character, and <code>text.toUpperCase()</code> creates uppercase text.</p>
-      <div class="example"><b>"ada@example.com".includes("@") // true</b></div>
+      <div class="example"><b>"JavaScript".includes("Script") // true</b></div>
       <p>Methods use a dot because they belong to the value on their left. They do not change the original string unless you store the new result.</p>
     `,
     fnName: 'hasAtSign',
@@ -587,7 +586,7 @@ const ROADMAP = [
     summary: 'Read user input and give helpful feedback',
     content: `
       <p>Forms turn user input into program data. Read values from inputs, stop unwanted page reloads with <code>event.preventDefault()</code>, then validate before using the data.</p>
-      <div class="example"><b>form.addEventListener("submit", (event) =&gt; {<br>&nbsp;&nbsp;event.preventDefault();<br>&nbsp;&nbsp;if (!email.includes("@")) showError("Enter a valid email");<br>});</b></div>
+      <div class="example"><b>form.addEventListener("submit", (event) =&gt; {<br>&nbsp;&nbsp;event.preventDefault();<br>&nbsp;&nbsp;if (name === "") showError("Enter your name");<br>});</b></div>
       <p>A useful validation message tells the user exactly what to fix. Build login and registration forms only after you can reliably handle one input.</p>
     `,
     fnName: 'isValidEmail',
@@ -665,7 +664,7 @@ const ROADMAP = [
     summary: 'Testing, debugging, performance, Node.js, and projects',
     content: `
       <p>Professional JavaScript means writing code that other people can understand, test, and safely change. Use clear names, small functions, version control, tests, and browser or Node debugging tools.</p>
-      <div class="example"><b>// Given → when → then<br>expect(formatName("ada")).toBe("Ada");</b></div>
+      <div class="example"><b>// Given → when → then<br>expect(add(2, 3)).toBe(5);</b></div>
       <p>Next, build projects in order: calculator → quiz or todo app → weather app → API-backed app → full-stack app. Learn Node.js, npm, modules, HTTP APIs, and a framework <em>after</em> the language foundations feel natural.</p>
     `,
     fnName: 'formatName',
@@ -823,12 +822,12 @@ function loadRoadmapLesson(idx){
       </div>
       </section>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — feel free to keep tweaking the code below.</div>' : ''}
-      <div class="roadmap-code-toolbar">
-        <span>${roadmapFunctionWrapperHidden ? 'Beginner view: focus on the code inside.' : 'Function view: see the complete function.'}</span>
-        <button class="roadmap-wrapper-toggle" id="roadmapWrapperToggle" type="button" aria-pressed="${!roadmapFunctionWrapperHidden}">
-          ${roadmapFunctionWrapperHidden ? 'Show function wrapper' : 'Hide function wrapper'}
-        </button>
-      </div>
+      ${roadmapFunctionWrapperHidden ? '' : `
+        <div class="roadmap-code-toolbar">
+          <span>Function view: see the complete function.</span>
+          <button class="roadmap-wrapper-toggle" id="roadmapWrapperToggle" type="button" aria-pressed="true">Hide function wrapper</button>
+        </div>
+      `}
       <div class="roadmap-editor-wrap">
         <div class="roadmap-gutter" id="roadmapGutter">1</div>
         <div class="roadmap-code-area">
@@ -899,7 +898,8 @@ function loadRoadmapLesson(idx){
   refreshRoadmapHighlight();
 
   document.getElementById('roadmapRunBtn').addEventListener('click', runRoadmapCode);
-  document.getElementById('roadmapWrapperToggle').addEventListener('click', toggleRoadmapFunctionWrapper);
+  const wrapperToggle = document.getElementById('roadmapWrapperToggle');
+  if(wrapperToggle) wrapperToggle.addEventListener('click', toggleRoadmapFunctionWrapper);
   document.getElementById('roadmapResetBtn').addEventListener('click', ()=>{
     roadmapCodeInputEl.value = roadmapFunctionWrapperHidden
       ? unwrapRoadmapFunction(lesson.starter)

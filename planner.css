@@ -367,6 +367,109 @@
   border-radius: 4px;
 }
 
+.pnode[data-type="task"] {
+  background: #22282b;
+  border-color: #6a8a9a;
+  border-style: dashed;
+  border-radius: 6px;
+}
+.pnode[data-type="note"] {
+  background: #33301c;
+  border-color: #a89a3f;
+  border-style: dashed;
+  border-radius: 2px;
+  font-style: italic;
+  color: #d8cf9a;
+}
+
+/* Status dot — a lightweight progress tracker independent of the actual
+   flowchart logic. Sits opposite the delete button so both are reachable
+   without overlapping. */
+.pnode-status {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #1e1e1e;
+  cursor: pointer;
+  z-index: 2;
+  background: #666;
+}
+.pnode-status[data-status="none"] {
+  background: #666;
+}
+.pnode-status[data-status="progress"] {
+  background: #e3a13f;
+}
+.pnode-status[data-status="solved"] {
+  background: #4c9a5a;
+}
+.pnode-status[data-status="stuck"] {
+  background: #c0392b;
+}
+
+/* Checklist — freeform sub-items inside any node for breaking a step down
+   further and checking things off while solving it. */
+.pnode-checklist {
+  margin-top: 8px;
+  text-align: left;
+  cursor: default;
+}
+.pnode-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 10.5px;
+  padding: 1px 0;
+  cursor: default;
+}
+.pnode-check-row input[type="checkbox"] {
+  margin-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.pnode-check-row span:first-of-type {
+  flex: 1;
+  word-break: break-word;
+}
+.pnode-check-row span.done {
+  text-decoration: line-through;
+  color: #888;
+}
+.pnode-check-remove {
+  flex-shrink: 0;
+  color: #888;
+  cursor: pointer;
+  font-size: 9px;
+  visibility: hidden;
+  padding: 0 2px;
+}
+.pnode-check-row:hover .pnode-check-remove {
+  visibility: visible;
+}
+.pnode-check-remove:hover {
+  color: #f66;
+}
+.pnode-check-add {
+  margin-top: 3px;
+}
+.pnode-check-add input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed #444;
+  color: #999;
+  font: inherit;
+  font-size: 10.5px;
+  outline: none;
+  padding: 1px 0;
+}
+.pnode-check-add input:focus {
+  border-bottom-color: #6ab0f3;
+}
+
 .pnode .pnode-edit {
   width: 100%;
   background: transparent;

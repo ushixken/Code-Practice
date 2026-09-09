@@ -11,7 +11,14 @@
     { type: "decision", label: "Decision", icon: "◇", text: "condition?" },
     { type: "function", label: "Function", icon: "ƒ", text: "callFunction()" },
     { type: "loop", label: "Loop", icon: "↻", text: "for / while" },
+    { type: "task", label: "Task / Sub-problem", icon: "☐", text: "Break this into a smaller piece" },
+    { type: "note", label: "Note", icon: "🗒", text: "Note / assumption / TODO" },
   ];
+
+  // Cycles when the little status dot on a node is clicked. Purely a
+  // planning aid — has no effect on the flowchart logic itself.
+  const STATUS_ORDER = ["none", "progress", "solved", "stuck"];
+  const STATUS_LABEL = { none: "Not started", progress: "In progress", solved: "Solved", stuck: "Stuck" };
 
   // Fixed-but-generous canvas extent (PureRef/AutoCAD-style bounded "infinite" plane).
   // Raise these later if plans get much bigger.
@@ -277,6 +284,8 @@
       text: defaultText,
       x: x != null ? x : center.x - 70 + jitter(),
       y: y != null ? y : center.y - 30 + jitter(),
+      status: "none",
+      checklist: [],
     };
     state.nodes.push(node);
     render();
@@ -372,6 +381,9 @@
   }
 
   function renderNode(inner, n) {
+    if (!n.status) n.status = "none";
+    if (!n.checklist) n.checklist = [];
+
     const el = document.createElement("div");
     el.className = "pnode";
     el.dataset.type = n.type;
@@ -394,6 +406,23 @@
       drawEdges();
     });
     el.appendChild(inSocket);
+
+    // Status dot: a lightweight progress tracker independent of the actual
+    // flowchart logic — click to cycle Not started → In progress → Solved →
+    // Stuck, useful when a node is really "a piece of the problem" you're
+    // working through rather than a step that's already correct.
+    const status = document.createElement("div");
+    status.className = "pnode-status";
+    status.dataset.status = n.status;
+    status.title = STATUS_LABEL[n.status] + " (click to change)";
+    status.addEventListener("mousedown", (e) => e.stopPropagation());
+    status.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const idx = STATUS_ORDER.indexOf(n.status);
+      n.status = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
+      render();
+    });
+    el.appendChild(status);
 
     const del = document.createElement("div");
     del.className = "pnode-delete";
@@ -432,6 +461,61 @@
         }
       });
     });
+
+    // Checklist: freeform sub-items for breaking a node down further —
+    // "handle negative numbers", "handle empty input", etc — that can be
+    // checked off while working the problem without needing a separate node.
+    const checklist = document.createElement("div");
+    checklist.className = "pnode-checklist";
+    checklist.addEventListener("mousedown", (e) => e.stopPropagation());
+    checklist.addEventListener("click", (e) => e.stopPropagation());
+
+    n.checklist.forEach((item, idx) => {
+      const row = document.createElement("label");
+      row.className = "pnode-check-row";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = !!item.done;
+      box.addEventListener("change", () => {
+        item.done = box.checked;
+        render();
+      });
+      const label = document.createElement("span");
+      label.textContent = item.text;
+      if (item.done) label.classList.add("done");
+      const rm = document.createElement("span");
+      rm.className = "pnode-check-remove";
+      rm.textContent = "✕";
+      rm.title = "Remove item";
+      rm.addEventListener("click", (e) => {
+        e.stopPropagation();
+        n.checklist.splice(idx, 1);
+        render();
+      });
+      row.appendChild(box);
+      row.appendChild(label);
+      row.appendChild(rm);
+      checklist.appendChild(row);
+    });
+
+    const addRow = document.createElement("div");
+    addRow.className = "pnode-check-add";
+    const addInput = document.createElement("input");
+    addInput.type = "text";
+    addInput.placeholder = "+ add sub-item";
+    addInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        const text = addInput.value.trim();
+        if (text) {
+          n.checklist.push({ text, done: false });
+          render();
+        }
+      }
+    });
+    addRow.appendChild(addInput);
+    checklist.appendChild(addRow);
+    el.appendChild(checklist);
 
     const outSocket = document.createElement("div");
     outSocket.className = "pnode-socket socket-out";
@@ -480,6 +564,8 @@
       if (e.target.classList.contains("pnode-delete")) return;
       if (e.target.classList.contains("pnode-edit")) return;
       if (e.target.classList.contains("pnode-socket")) return;
+      if (e.target.classList.contains("pnode-status")) return;
+      if (e.target.closest(".pnode-checklist")) return;
       dragging = true;
       sx = e.clientX;
       sy = e.clientY;

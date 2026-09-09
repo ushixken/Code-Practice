@@ -769,6 +769,33 @@ function learningSupportFor(lesson){
   };
 }
 
+function roadmapPracticalsFor(lessonId){
+  return (window.ROADMAP_PRACTICALS && window.ROADMAP_PRACTICALS[lessonId]) || [];
+}
+
+function roadmapPracticalsMarkup(lessonId){
+  const practicals = roadmapPracticalsFor(lessonId);
+  if(!practicals.length) return '';
+  return `
+    <section class="roadmap-practical-library" aria-label="Unlocked practical examples">
+      <div class="roadmap-practical-library-head">
+        <span class="rp-section-label">PRACTICALS UNLOCKED</span>
+        <span>${practicals.length} ${practicals.length === 1 ? 'example' : 'examples'}</span>
+      </div>
+      <p>Try these new situations after mastering the main exercise. They use the same idea without repeating its answer.</p>
+      <div class="roadmap-practical-list">
+        ${practicals.map((practical, index) => `
+          <article class="roadmap-practical-card">
+            <div><span>Practical ${index + 1}</span><h4>${practical.title}</h4></div>
+            <p>${practical.prompt}</p>
+            <pre><code>${highlightCode(practical.code)}</code></pre>
+          </article>
+        `).join('')}
+      </div>
+    </section>
+  `;
+}
+
 function loadRoadmapLesson(idx){
   currentRoadmapIdx = idx;
   roadmapRanOnce = false;
@@ -821,7 +848,8 @@ function loadRoadmapLesson(idx){
         <div class="roadmap-reflection"><b>Reflect:</b> ${learningSupport.reflection}</div>
       </div>
       </section>
-      ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — feel free to keep tweaking the code below.</div>' : ''}
+      ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — practical examples are now unlocked below.</div>' : ''}
+      ${isDone ? roadmapPracticalsMarkup(lesson.id) : ''}
       ${roadmapFunctionWrapperHidden ? '' : `
         <div class="roadmap-code-toolbar">
           <span>Function view: see the complete function.</span>
@@ -1130,8 +1158,17 @@ function showRoadmapMasteredBanner(){
   if(!bodyEl || !editorWrap || bodyEl.querySelector('.roadmap-complete-banner')) return;
   const banner = document.createElement('div');
   banner.className = 'roadmap-complete-banner';
-  banner.textContent = '✓ Mastered — feel free to keep tweaking the code below.';
+  banner.textContent = '✓ Mastered — practical examples are now unlocked below.';
   bodyEl.insertBefore(banner, editorWrap);
+  showRoadmapPracticals(ROADMAP[currentRoadmapIdx].id);
+}
+
+function showRoadmapPracticals(lessonId){
+  const bodyEl = roadmapDetailEl.querySelector('.roadmap-workspace');
+  const editorWrap = bodyEl && bodyEl.querySelector('.roadmap-editor-wrap');
+  if(!bodyEl || !editorWrap || bodyEl.querySelector('.roadmap-practical-library')) return;
+  const practicalMarkup = roadmapPracticalsMarkup(lessonId);
+  if(editorWrap && practicalMarkup) editorWrap.insertAdjacentHTML('beforebegin', practicalMarkup);
 }
 
 async function runRoadmapCode(){

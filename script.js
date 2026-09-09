@@ -168,6 +168,48 @@ const PROBLEMS = [
 /* ============ ROADMAP (JS fundamentals course) ============ */
 const ROADMAP = [
   {
+    id: 'firstProgram', level: 'easy', title: 'How Programs Work',
+    summary: 'Instructions, values, and your first JavaScript program',
+    content: `
+      <p>A <b>program</b> is a sequence of instructions. JavaScript reads those instructions from top to bottom, keeps values in memory, and performs each action in order.</p>
+      <p>In a browser, JavaScript runs in the page. In Node.js, it runs on your computer. The language is the same; the environment gives it different tools.</p>
+      <div class="example"><b>console.log("Hello, JavaScript!");</b><br>→ Hello, JavaScript!</div>
+      <p>Use <code>console.log()</code> to inspect values while learning and debugging. It is the quickest way to ask: “What is my code doing right now?”</p>
+      <div class="roadmap-runner-note"><b>Why is there a function switch?</b> JavaScript can run <code>console.log()</code> by itself in the browser console or a <code>.js</code> file. This learning app uses a function behind the scenes only so it can run and check your lesson safely. You do not need to understand functions yet.</div>
+    `,
+    fnName: 'firstProgram',
+    starter: "function firstProgram() {\n  // Print this message in the console.\n  console.log(\"Hello, JavaScript!\");\n}",
+    task: 'Use <code>console.log()</code> to print <code>"Hello, JavaScript!"</code>. This is how you inspect values while learning and debugging.',
+    testMode: 'custom',
+    validate: async (fn) => {
+      const lines = [];
+      const output = [];
+      const originalLog = console.log;
+      console.log = (...values) => output.push(values.join(' '));
+      try {
+        fn();
+      } finally {
+        console.log = originalLog;
+      }
+      const ok = output.includes('Hello, JavaScript!');
+      lines.push(`${ok ? '✓' : '✗'} Lesson check: console.log("Hello, JavaScript!")${ok ? ' printed the expected message.' : ' did not print the expected message.'}`);
+      return { ok, lines, consoleOutput: output };
+    }
+  },
+  {
+    id: 'values', level: 'easy', title: 'Values, Variables, and Types',
+    summary: 'The building blocks every JavaScript program uses',
+    content: `
+      <p>Every program works with <b>values</b>: text, numbers, true/false answers, and collections. A variable gives a value a useful name.</p>
+      <div class="example"><b>const user = "Ada";<br>let score = 0;<br>score = score + 10;</b></div>
+      <p>Use <code>const</code> by default. Use <code>let</code> only when the variable needs to change. JavaScript is dynamically typed, so <code>typeof score</code> is <code>'number'</code> and <code>typeof user</code> is <code>'string'</code>.</p>
+    `,
+    fnName: 'makeMessage',
+    starter: "function makeMessage(name) {\n  // Return \"Hello, \" followed by name.\n\n}",
+    task: 'Practice using a parameter and string concatenation to return a message.',
+    testMode: 'io', tests: [[['Ada'], 'Hello, Ada'], [['Sam'], 'Hello, Sam']]
+  },
+  {
     id: 'variables', level: 'easy', title: 'Variables (var, let, const)',
     summary: 'Storing data with let, const, and var',
     content: `
@@ -175,7 +217,7 @@ const ROADMAP = [
       <p><code>let</code> — a variable that can be reassigned later.<br><code>const</code> — a variable that cannot be reassigned after it's set.</p>
       <p>You'll also see <code>var</code> in older code, but <code>let</code>/<code>const</code> fixed some of its quirks (like leaking outside blocks), so prefer them.</p>
       <div class="example"><b>let score = 0;</b> score = score + 10; // OK, score is now 10</div>
-      <div class="example"><b>const name = 'Ada';</b> name = 'Bob'; // ❌ TypeError</div>
+      <div class="example"><b>const name = "Ada";<br>name = "Bob"; // ❌ TypeError</b></div>
     `,
     fnName: 'declareAge',
     starter: 'function declareAge() {\n  // Declare a variable named age using `let`,\n  // set it to 25, then return it.\n\n}',
@@ -187,12 +229,12 @@ const ROADMAP = [
     id: 'dataTypes', level: 'easy', title: 'Data Types',
     summary: 'string, number, boolean, array, object, and typeof',
     content: `
-      <p>JavaScript has a handful of core types: <b>string</b> ('hi'), <b>number</b> (42), <b>boolean</b> (true/false), <b>array</b> ([1,2,3]), <b>object</b> ({}), and <b>undefined/null</b> for "nothing here".</p>
-      <p>The <code>typeof</code> operator tells you what type a value is at runtime: <code>typeof 5</code> is <code>'number'</code>, <code>typeof 'hi'</code> is <code>'string'</code>.</p>
+      <p>JavaScript has a handful of core types: <b>string</b> ("hi"), <b>number</b> (42), <b>boolean</b> (true/false), <b>array</b> ([1,2,3]), <b>object</b> ({}), and <b>undefined/null</b> for "nothing here".</p>
+      <p>The <code>typeof</code> operator tells you what type a value is at runtime: <code>typeof 5</code> is <code>"number"</code>, <code>typeof "hi"</code> is <code>"string"</code>.</p>
       <p>Arrays are actually a special kind of object, so <code>typeof [1,2]</code> is <code>'object'</code> too — that's a classic gotcha.</p>
     `,
     fnName: 'describeType',
-    starter: "function describeType(value) {\n  // Return 'string', 'number', or 'boolean'\n  // depending on the type of `value`.\n\n}",
+    starter: "function describeType(value) {\n  // Return \"string\", \"number\", or \"boolean\"\n  // depending on the type of `value`.\n\n}",
     task: "Return <code>'string'</code>, <code>'number'</code>, or <code>'boolean'</code> depending on the type of the argument, using <code>typeof</code>.",
     testMode: 'io',
     tests: [[['hi'], 'string'], [[42], 'number'], [[true], 'boolean'], [[''], 'string']]
@@ -203,8 +245,8 @@ const ROADMAP = [
     content: `
       <p><b>Arithmetic:</b> <code>+ - * / %</code>. <b>Comparison:</b> always prefer <code>===</code> / <code>!==</code> over <code>==</code>/<code>!=</code>, since the loose versions silently convert types.</p>
       <p><b>Logical:</b> <code>&&</code> (and), <code>||</code> (or), <code>!</code> (not) combine boolean expressions.</p>
-      <div class="example"><b>5 == '5'</b> → true (loose, converts types)</div>
-      <div class="example"><b>5 === '5'</b> → false (strict, no conversion)</div>
+      <div class="example"><b>5 == "5"</b> → true (loose, converts types)</div>
+      <div class="example"><b>5 === "5"</b> → false (strict, no conversion)</div>
     `,
     fnName: 'isAdult',
     starter: 'function isAdult(age) {\n  // Return true if age is 18 or over.\n\n}',
@@ -220,7 +262,7 @@ const ROADMAP = [
       <div class="example"><b>if (x > 10) { ... } else if (x > 5) { ... } else { ... }</b></div>
     `,
     fnName: 'trafficAction',
-    starter: "function trafficAction(light) {\n  // 'red' -> 'stop'\n  // 'yellow' -> 'slow down'\n  // 'green' -> 'go'\n\n}",
+    starter: "function trafficAction(light) {\n  // \"red\" -> \"stop\"\n  // \"yellow\" -> \"slow down\"\n  // \"green\" -> \"go\"\n\n}",
     task: "Given a traffic light color, return <code>'stop'</code> for red, <code>'slow down'</code> for yellow, and <code>'go'</code> for green.",
     testMode: 'io',
     tests: [[['red'], 'stop'], [['yellow'], 'slow down'], [['green'], 'go']]
@@ -234,7 +276,7 @@ const ROADMAP = [
       <p>Arrow functions are a shorter way to write the same thing: <code>const add = (a, b) => a + b;</code></p>
     `,
     fnName: 'greet',
-    starter: "function greet(name) {\n  // Return 'Hello, <name>!'\n\n}",
+    starter: "function greet(name) {\n  // Return \"Hello, <name>!\"\n\n}",
     task: "Return the string <code>'Hello, '</code> followed by <code>name</code> and an exclamation mark.",
     testMode: 'io',
     tests: [[['Ada'], 'Hello, Ada!'], [['Bob'], 'Hello, Bob!']]
@@ -266,10 +308,24 @@ const ROADMAP = [
     tests: [[[[1, 2, 3]], 6], [[[]], 0], [[[5, -5, 10]], 10]]
   },
   {
+    id: 'fizzBuzz', level: 'medium', title: 'Interview Practice: FizzBuzz',
+    summary: 'Use loops, conditions, and the remainder operator in one practical challenge',
+    content: `
+      <p><b>FizzBuzz</b> is a classic interview question because it checks whether you can combine a loop, conditions, and clear ordering.</p>
+      <div class="example"><b>for (let i = 1; i &lt;= n; i++) {<br>&nbsp;&nbsp;if (i % 15 === 0) result.push("FizzBuzz");<br>&nbsp;&nbsp;else if (i % 3 === 0) result.push("Fizz");<br>&nbsp;&nbsp;else if (i % 5 === 0) result.push("Buzz");<br>&nbsp;&nbsp;else result.push(i);<br>}</b></div>
+      <p>Check <code>15</code> first because a number divisible by both 3 and 5 must become <code>"FizzBuzz"</code>, not just <code>"Fizz"</code>. This is the same skill you use when ordering real validation rules.</p>
+    `,
+    fnName: 'fizzBuzz',
+    starter: "function fizzBuzz(n) {\n  // Return an array from 1 to n.\n  // Multiples of 3 become \"Fizz\"; multiples of 5 become \"Buzz\";\n  // multiples of both become \"FizzBuzz\".\n\n}",
+    task: 'Build the result one number at a time. Start with an empty array, loop from 1 through <code>n</code>, then return the array.',
+    testMode: 'io',
+    tests: [[[5], [1, 2, 'Fizz', 4, 'Buzz']], [[15], [1, 2, 'Fizz', 4, 'Buzz', 'Fizz', 7, 8, 'Fizz', 'Buzz', 11, 'Fizz', 13, 14, 'FizzBuzz']]]
+  },
+  {
     id: 'objects', level: 'medium', title: 'Objects',
     summary: 'Key-value pairs and dot/bracket access',
     content: `
-      <p>Objects group related data as key-value pairs: <code>{ first: 'Ada', last: 'Lovelace' }</code>. Access a value with dot notation (<code>person.first</code>) or brackets (<code>person['first']</code>) when the key is dynamic.</p>
+      <p>Objects group related data as key-value pairs: <code>{ first: "Ada", last: "Lovelace" }</code>. Access a value with dot notation (<code>person.first</code>) or brackets (<code>person["first"]</code>) when the key is dynamic.</p>
     `,
     fnName: 'getFullName',
     starter: 'function getFullName(person) {\n  // person is { first, last }.\n  // Return "First Last".\n\n}',
@@ -355,21 +411,76 @@ const ROADMAP = [
       lines.push(`${ok ? '✓' : '✗'} await delayedDouble(5) → ${actual}${ok ? '' : '  (expected 10)'}`);
       return { ok, lines };
     }
+  },
+  {
+    id: 'domEvents', level: 'medium', title: 'DOM & Events',
+    summary: 'Make a web page respond to the user',
+    content: `
+      <p>The <b>DOM</b> is JavaScript’s view of a web page. Use <code>document.querySelector()</code> to find an element, then update <code>textContent</code>, <code>classList</code>, or attach an event listener.</p>
+      <div class="example"><b>button.addEventListener('click', () =&gt; {<br>&nbsp;&nbsp;message.textContent = 'Saved!';<br>});</b></div>
+      <p>Events are how the browser tells your program that something happened: a click, key press, form submission, or input change.</p>
+    `,
+    fnName: 'buttonMessage',
+    starter: "function buttonMessage(name) {\n  // In a real page, an event handler can use this\n  // value to update the DOM. Return a button message.\n\n}",
+    task: 'Return <code>name + " saved"</code>. This keeps the example focused on the value a click handler would display.',
+    testMode: 'io', tests: [[['Plan'], 'Plan saved'], [['Note'], 'Note saved']]
+  },
+  {
+    id: 'modulesErrors', level: 'hard', title: 'Modules & Error Handling',
+    summary: 'Organize code and handle failures deliberately',
+    content: `
+      <p>Modules keep files focused. Export a value with <code>export</code>, then use <code>import</code> where it is needed. This prevents large programs from becoming one hard-to-navigate file.</p>
+      <div class="example"><b>export function add(a, b) { return a + b; }<br>import { add } from "./math.js";</b></div>
+      <p>Use <code>try/catch</code> around work that can fail, especially network requests and JSON parsing. Give errors useful messages so future you can solve them.</p>
+    `,
+    fnName: 'safeDivide',
+    starter: "function safeDivide(a, b) {\n  // Return a / b. If b is 0, return 'Cannot divide by zero'.\n\n}",
+    task: 'Practice a predictable failure path: never let an invalid operation silently produce a confusing result.',
+    testMode: 'io', tests: [[[8, 2], 4], [[8, 0], 'Cannot divide by zero']]
+  },
+  {
+    id: 'objectsPrototypes', level: 'hard', title: 'Objects, Classes & Prototypes',
+    summary: 'Model related data and behavior',
+    content: `
+      <p>Objects combine related data and behavior. Classes are convenient syntax for creating related objects, while prototypes are the mechanism JavaScript uses to share methods behind the scenes.</p>
+      <div class="example"><b>class User {<br>&nbsp;&nbsp;constructor(name) { this.name = name; }<br>&nbsp;&nbsp;greet() { return 'Hi, ' + this.name; }<br>}</b></div>
+      <p>Learn classes for readability, then study prototypes so <code>this</code>, inheritance, and method sharing make sense in real code.</p>
+    `,
+    fnName: 'getUserName',
+    starter: "function getUserName(user) {\n  // user is an object with a name property.\n  // Return the name.\n\n}",
+    task: 'Read a property from an object—the basic operation behind most object-oriented code.',
+    testMode: 'io', tests: [[[{ name: 'Ada' }], 'Ada'], [[{ name: 'Lin' }], 'Lin']]
+  },
+  {
+    id: 'professionalPractice', level: 'hard', title: 'Professional JavaScript',
+    summary: 'Testing, debugging, performance, Node.js, and projects',
+    content: `
+      <p>Professional JavaScript means writing code that other people can understand, test, and safely change. Use clear names, small functions, version control, tests, and browser or Node debugging tools.</p>
+      <div class="example"><b>// Given → when → then<br>expect(formatName("ada")).toBe("Ada");</b></div>
+      <p>Next, build projects in order: calculator → quiz or todo app → weather app → API-backed app → full-stack app. Learn Node.js, npm, modules, HTTP APIs, and a framework <em>after</em> the language foundations feel natural.</p>
+    `,
+    fnName: 'formatName',
+    starter: "function formatName(name) {\n  // Return the name with its first letter capitalized.\n\n}",
+    task: 'Finish with a small, testable utility. Then choose a project and use the roadmap as your reference.',
+    testMode: 'io', tests: [[['ada'], 'Ada'], [['javaScript'], 'JavaScript']]
   }
 ];
 
 let roadmapSolved = new Set();
 let currentRoadmapIdx = 0;
 let roadmapRanOnce = false;
+let roadmapFunctionWrapperHidden = false;
 
 const roadmapView = document.getElementById('roadmapView');
 const roadmapNodesEl = document.getElementById('roadmapNodes');
 const roadmapDetailEl = document.getElementById('roadmapDetail');
 const roadmapProgressFill = document.getElementById('roadmapProgressFill');
 const roadmapProgressLabel = document.getElementById('roadmapProgressLabel');
+const roadmapLevelSelect = document.getElementById('roadmapLevelSelect');
 const problemsBtn = document.getElementById('problemsBtn');
 const roadmapBtn = document.getElementById('roadmapBtn');
 const mainEl = document.querySelector('.main');
+let roadmapLevelFilter = 'all';
 
 function isRoadmapLessonLocked(idx){
   if(idx < 0 || idx >= ROADMAP.length) return true;
@@ -381,6 +492,7 @@ function isRoadmapLessonLocked(idx){
 function buildRoadmapPath(){
   roadmapNodesEl.innerHTML = '';
   ROADMAP.forEach((lesson, idx)=>{
+    if(roadmapLevelFilter !== 'all' && lesson.level !== roadmapLevelFilter) return;
     const isDone = roadmapSolved.has(lesson.id);
     const isLocked = isRoadmapLessonLocked(idx);
     const isCurrent = idx === currentRoadmapIdx;
@@ -414,9 +526,13 @@ function buildRoadmapPath(){
 }
 
 function updateRoadmapProgress(){
-  const pct = Math.round((roadmapSolved.size / ROADMAP.length) * 100);
+  const visibleLessons = roadmapLevelFilter === 'all'
+    ? ROADMAP
+    : ROADMAP.filter(lesson => lesson.level === roadmapLevelFilter);
+  const solvedCount = visibleLessons.filter(lesson => roadmapSolved.has(lesson.id)).length;
+  const pct = visibleLessons.length ? Math.round((solvedCount / visibleLessons.length) * 100) : 0;
   roadmapProgressFill.style.width = pct + '%';
-  roadmapProgressLabel.textContent = `${roadmapSolved.size} / ${ROADMAP.length} mastered`;
+  roadmapProgressLabel.textContent = `${solvedCount} / ${visibleLessons.length} mastered`;
 }
 
 function loadRoadmapLesson(idx){
@@ -424,6 +540,13 @@ function loadRoadmapLesson(idx){
   roadmapRanOnce = false;
   const lesson = ROADMAP[idx];
   const isDone = roadmapSolved.has(lesson.id);
+  const firstFunctionsLesson = ROADMAP.findIndex(item => item.id === 'functions');
+  // Before functions are taught, let beginners focus on the instructions in
+  // the body of the code instead of introducing a function declaration early.
+  roadmapFunctionWrapperHidden = idx < firstFunctionsLesson;
+  const starterForDisplay = roadmapFunctionWrapperHidden
+    ? unwrapRoadmapFunction(lesson.starter)
+    : lesson.starter;
 
   roadmapDetailEl.innerHTML = `
     <div class="rp-head">
@@ -435,11 +558,17 @@ function loadRoadmapLesson(idx){
       <div class="rp-section-label">YOUR TURN</div>
       <p>${lesson.task}</p>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — feel free to keep tweaking the code below.</div>' : ''}
+      <div class="roadmap-code-toolbar">
+        <span>${roadmapFunctionWrapperHidden ? 'Beginner view: focus on the code inside.' : 'Function view: see the complete function.'}</span>
+        <button class="roadmap-wrapper-toggle" id="roadmapWrapperToggle" type="button" aria-pressed="${!roadmapFunctionWrapperHidden}">
+          ${roadmapFunctionWrapperHidden ? 'Show function wrapper' : 'Hide function wrapper'}
+        </button>
+      </div>
       <div class="roadmap-editor-wrap">
         <div class="roadmap-gutter" id="roadmapGutter">1</div>
         <div class="roadmap-code-area">
           <pre id="roadmapHighlightLayer"></pre>
-          <textarea id="roadmapCodeInput" spellcheck="false">${lesson.starter}</textarea>
+          <textarea id="roadmapCodeInput" spellcheck="false">${starterForDisplay}</textarea>
         </div>
       </div>
       <div class="roadmap-actions">
@@ -456,13 +585,25 @@ function loadRoadmapLesson(idx){
     </div>
   `;
 
+  // Lesson examples are real code, not plain instructions. Highlight them so
+  // keywords, strings, values, and comments are easy to distinguish at a glance.
+  roadmapDetailEl.querySelectorAll('.example b').forEach((exampleCode) => {
+    // Convert authored <br> tags to real newlines before tokenizing. Without
+    // this, textContent joins every line together into one unreadable snippet.
+    exampleCode.querySelectorAll('br').forEach((lineBreak) => lineBreak.replaceWith('\n'));
+    exampleCode.innerHTML = highlightCode(exampleCode.textContent);
+  });
+
   const roadmapCodeInputEl = document.getElementById('roadmapCodeInput');
   updateRoadmapGutter();
   refreshRoadmapHighlight();
 
   document.getElementById('roadmapRunBtn').addEventListener('click', runRoadmapCode);
+  document.getElementById('roadmapWrapperToggle').addEventListener('click', toggleRoadmapFunctionWrapper);
   document.getElementById('roadmapResetBtn').addEventListener('click', ()=>{
-    roadmapCodeInputEl.value = lesson.starter;
+    roadmapCodeInputEl.value = roadmapFunctionWrapperHidden
+      ? unwrapRoadmapFunction(lesson.starter)
+      : lesson.starter;
     updateRoadmapGutter();
     refreshRoadmapHighlight();
     roadmapRanOnce = false;
@@ -605,6 +746,47 @@ function updateRoadmapGutter(){
   gutterEl.textContent = out;
 }
 
+function unwrapRoadmapFunction(source){
+  const opening = source.indexOf('{');
+  const closing = source.lastIndexOf('}');
+  if(opening < 0 || closing <= opening) return source;
+  return source.slice(opening + 1, closing).replace(/^\n|\n$/g, '');
+}
+
+function wrapRoadmapFunction(body, lesson){
+  const opening = lesson.starter.indexOf('{');
+  if(opening < 0) return body;
+  const signature = lesson.starter.slice(0, opening + 1);
+  return `${signature}\n${body}\n}`;
+}
+
+function isRoadmapFunctionWrapped(code, lesson){
+  return code.trimStart().startsWith(`function ${lesson.fnName}`);
+}
+
+function toggleRoadmapFunctionWrapper(){
+  const lesson = ROADMAP[currentRoadmapIdx];
+  const codeInput = document.getElementById('roadmapCodeInput');
+  if(!lesson || !codeInput) return;
+  const isCurrentlyWrapped = isRoadmapFunctionWrapped(codeInput.value, lesson);
+  roadmapFunctionWrapperHidden = isCurrentlyWrapped;
+  codeInput.value = roadmapFunctionWrapperHidden
+    ? unwrapRoadmapFunction(codeInput.value)
+    : wrapRoadmapFunction(codeInput.value, lesson);
+  const toggle = document.getElementById('roadmapWrapperToggle');
+  const toolbar = toggle && toggle.parentElement;
+  if(toggle){
+    toggle.textContent = roadmapFunctionWrapperHidden ? 'Show function wrapper' : 'Hide function wrapper';
+    toggle.setAttribute('aria-pressed', String(!roadmapFunctionWrapperHidden));
+  }
+  if(toolbar) toolbar.firstElementChild.textContent = roadmapFunctionWrapperHidden
+    ? 'Beginner view: focus on the code inside.'
+    : 'Function view: see the complete function.';
+  updateRoadmapGutter();
+  refreshRoadmapHighlight();
+  codeInput.focus();
+}
+
 function refreshRoadmapHighlight(){
   const codeInput = document.getElementById('roadmapCodeInput');
   const layer = document.getElementById('roadmapHighlightLayer');
@@ -641,7 +823,10 @@ function showRoadmapMasteredBanner(){
 async function runRoadmapCode(){
   roadmapRanOnce = true;
   const lesson = ROADMAP[currentRoadmapIdx];
-  const code = document.getElementById('roadmapCodeInput').value;
+  const visibleCode = document.getElementById('roadmapCodeInput').value;
+  const code = isRoadmapFunctionWrapped(visibleCode, lesson)
+    ? visibleCode
+    : wrapRoadmapFunction(visibleCode, lesson);
   const termEl = document.getElementById('roadmapTerminal');
   termEl.innerHTML = '';
 
@@ -652,7 +837,7 @@ async function runRoadmapCode(){
     termEl.appendChild(div);
   };
   const fmtRoadmapVal = (v)=>{
-    if(typeof v === 'string') return `'${v}'`;
+    if(typeof v === 'string') return JSON.stringify(v);
     if(Array.isArray(v)) return '[' + v.map(fmtRoadmapVal).join(', ') + ']';
     if(v && typeof v === 'object') return JSON.stringify(v);
     return String(v);
@@ -673,7 +858,12 @@ async function runRoadmapCode(){
 
   if(lesson.testMode === 'custom'){
     try{
-      const { ok, lines } = await lesson.validate(fn);
+      const { ok, lines, consoleOutput } = await lesson.validate(fn);
+      if(consoleOutput && consoleOutput.length){
+        printRoadmapLine('Console output:', 'term-info');
+        consoleOutput.forEach(line => printRoadmapLine('  ' + line, 'term-info'));
+        printRoadmapLine('Lesson check:', 'term-dim');
+      }
       lines.forEach(line => printRoadmapLine(line, line.startsWith('✓') ? 'term-pass' : 'term-fail'));
       if(ok){
         printRoadmapLine('All checks passed. Nice work.', 'term-pass');
@@ -724,6 +914,17 @@ roadmapBtn.addEventListener('click', ()=>{
   if(!roadmapDetailEl.innerHTML.trim()){
     loadRoadmapLesson(0);
   }
+});
+
+roadmapLevelSelect.addEventListener('change', ()=>{
+  roadmapLevelFilter = roadmapLevelSelect.value;
+  const currentLesson = ROADMAP[currentRoadmapIdx];
+  if(roadmapLevelFilter !== 'all' && currentLesson && currentLesson.level !== roadmapLevelFilter){
+    const firstMatch = ROADMAP.findIndex(lesson => lesson.level === roadmapLevelFilter);
+    if(firstMatch >= 0) currentRoadmapIdx = firstMatch;
+  }
+  buildRoadmapPath();
+  if(ROADMAP[currentRoadmapIdx]) loadRoadmapLesson(currentRoadmapIdx);
 });
 
 /* ============ LEVELS (course map) ============ */
@@ -1118,3 +1319,9 @@ levelSelect.addEventListener('change', ()=>{
 
 buildTree();
 loadProblem(0);
+// The roadmap is the home screen. Problems remain one click away in the
+// activity bar, but reloading always brings learners back to their course.
+mainEl.classList.add('view-roadmap');
+roadmapBtn.classList.add('active');
+problemsBtn.classList.remove('active');
+loadRoadmapLesson(0);

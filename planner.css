@@ -165,6 +165,22 @@
   background: #333;
   border-color: #4a4a4a;
 }
+.planner-template-picker {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  color: #ccc;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.planner-template-picker:hover,
+.planner-template-picker:focus {
+  background: #333;
+  border-color: #e3a13f;
+  outline: none;
+}
 .planner-toolbar button.active {
   background: #e3a13f;
   color: #1e1e1e;
@@ -318,17 +334,16 @@
   border-color: transparent;
   box-shadow: none;
 }
-/* clip-path on the ::before shape layer clips away anything painted outside
-   its own box — including a box-shadow, since a shadow by definition
-   extends past the box edges. So the selection/linking glow has to live on
-   this outer, unclipped element instead of the ::before shape layer. */
+/* Keep state glows off the rectangular node container.  The visible outline
+   is drawn by the clipped ::before layer, so a regular box-shadow on the
+   container incorrectly highlights an invisible rectangle around a diamond. */
 .pnode[data-type="decision"].selected,
 .pnode[data-type="io"].selected {
-  box-shadow: 0 0 0 2px rgba(227, 161, 63, 0.35);
+  box-shadow: none;
 }
 .pnode[data-type="decision"].linking-source,
 .pnode[data-type="io"].linking-source {
-  box-shadow: 0 0 0 2px rgba(106, 176, 243, 0.4);
+  box-shadow: none;
 }
 .pnode[data-type="decision"]::before,
 .pnode[data-type="io"]::before {
@@ -348,9 +363,15 @@
 }
 .pnode[data-type="decision"].selected::before {
   border-color: #e3a13f;
+  /* A scaled copy of the clipped shape forms a visible diamond-only halo.
+     Filter shadows are clipped by clip-path in some browsers. */
+  transform: scale(1.035);
+  box-shadow: none;
 }
 .pnode[data-type="decision"].linking-source::before {
   border-color: #6ab0f3;
+  transform: scale(1.035);
+  box-shadow: none;
 }
 
 .pnode[data-type="io"]::before {
@@ -360,9 +381,13 @@
 }
 .pnode[data-type="io"].selected::before {
   border-color: #e3a13f;
+  transform: scale(1.035);
+  box-shadow: none;
 }
 .pnode[data-type="io"].linking-source::before {
   border-color: #6ab0f3;
+  transform: scale(1.035);
+  box-shadow: none;
 }
 
 .pnode[data-type="function"] {
@@ -491,6 +516,9 @@
   text-align: center;
   outline: none;
   resize: none;
+}
+.pnode-text {
+  cursor: text;
 }
 
 .pnode-delete {

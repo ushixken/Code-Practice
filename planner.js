@@ -111,11 +111,25 @@
     sep1.className = "planner-sep";
     toolbar.appendChild(sep1);
 
-    const templateBtn = document.createElement("button");
-    templateBtn.textContent = "✨ Basic template";
-    templateBtn.title = "Insert Start → Input → Process → Decision → Output → End";
-    templateBtn.addEventListener("click", insertTemplate);
-    toolbar.appendChild(templateBtn);
+    const templatePicker = document.createElement("select");
+    templatePicker.className = "planner-template-picker";
+    templatePicker.title = "Replace the canvas with a planning template";
+    templatePicker.innerHTML = `
+      <option value="" selected disabled>✨ Plan template</option>
+      <option value="bug">Bug fix</option>
+      <option value="feature">New feature</option>
+      <option value="refactor">Refactor</option>
+      <option value="logic">Basic logic</option>
+    `;
+    templatePicker.addEventListener("change", () => {
+      const kind = templatePicker.value;
+      if (!kind) return;
+      if (!state.nodes.length || confirm("Replace the current plan with this template?")) {
+        insertTemplate(kind);
+      }
+      templatePicker.value = "";
+    });
+    toolbar.appendChild(templatePicker);
 
     const centerBtn = document.createElement("button");
     centerBtn.textContent = "⊙ Center view";
@@ -297,11 +311,12 @@
     render();
   }
 
-  function insertTemplate() {
+  function insertTemplate(kind = "logic") {
     state.nodes = [];
     state.edges = [];
     const baseX = CANVAS_ORIGIN_X - 100, baseY = CANVAS_ORIGIN_Y - 340;
-    const seq = [
+    const templates = {
+      logic: [
       { type: "terminal", text: "Start", x: baseX + 60, y: baseY + 0 },
       { type: "io", text: "Read input", x: baseX + 40, y: baseY + 100 },
       { type: "process", text: "Validate / parse data", x: baseX + 20, y: baseY + 200 },
@@ -310,21 +325,56 @@
       { type: "process", text: "Run core logic", x: baseX + 20, y: baseY + 450 },
       { type: "io", text: "Print / return output", x: baseX + 20, y: baseY + 560 },
       { type: "terminal", text: "End", x: baseX + 60, y: baseY + 660 },
-    ];
+      ],
+      bug: [
+        { type: "task", text: "Describe the problem", x: baseX + 10, y: baseY },
+        { type: "process", text: "Make a small reproduction", x: baseX + 10, y: baseY + 110 },
+        { type: "decision", text: "Can I reproduce it?", x: baseX + 10, y: baseY + 220 },
+        { type: "note", text: "Gather error details / expected behavior", x: baseX + 300, y: baseY + 220 },
+        { type: "process", text: "Trace the relevant code", x: baseX + 10, y: baseY + 360 },
+        { type: "decision", text: "Is the cause clear?", x: baseX + 10, y: baseY + 470 },
+        { type: "note", text: "Collect evidence and revise hypothesis", x: baseX + 300, y: baseY + 470 },
+        { type: "task", text: "Try the smallest safe fix", x: baseX + 10, y: baseY + 610 },
+        { type: "process", text: "Verify the fix", x: baseX + 10, y: baseY + 720 },
+        { type: "terminal", text: "Done", x: baseX + 50, y: baseY + 830 },
+      ],
+      feature: [
+        { type: "task", text: "State the goal", x: baseX + 10, y: baseY },
+        { type: "note", text: "Define what success looks like", x: baseX + 10, y: baseY + 100 },
+        { type: "task", text: "Break it into small tasks", x: baseX + 10, y: baseY + 210 },
+        { type: "process", text: "Build the smallest useful piece", x: baseX + 10, y: baseY + 320 },
+        { type: "decision", text: "Does it behave as planned?", x: baseX + 10, y: baseY + 430 },
+        { type: "note", text: "Adjust the plan", x: baseX + 300, y: baseY + 430 },
+        { type: "decision", text: "More small pieces?", x: baseX + 10, y: baseY + 570 },
+        { type: "process", text: "Polish and review", x: baseX + 10, y: baseY + 710 },
+        { type: "terminal", text: "Done", x: baseX + 50, y: baseY + 820 },
+      ],
+      refactor: [
+        { type: "task", text: "Name the pain point", x: baseX + 10, y: baseY },
+        { type: "note", text: "Define a safe boundary", x: baseX + 10, y: baseY + 110 },
+        { type: "decision", text: "Is behavior protected?", x: baseX + 10, y: baseY + 220 },
+        { type: "task", text: "Add a safety check", x: baseX + 300, y: baseY + 220 },
+        { type: "process", text: "Make one small change", x: baseX + 10, y: baseY + 360 },
+        { type: "decision", text: "Still behaves correctly?", x: baseX + 10, y: baseY + 470 },
+        { type: "note", text: "Undo / reduce the change", x: baseX + 300, y: baseY + 470 },
+        { type: "decision", text: "More cleanup needed?", x: baseX + 10, y: baseY + 610 },
+        { type: "terminal", text: "Done", x: baseX + 50, y: baseY + 750 },
+      ],
+    };
+    const seq = templates[kind] || templates.logic;
     const ids = seq.map((n) => {
       const id = uid();
       state.nodes.push({ id, ...n });
       return id;
     });
     const link = (a, b, label) => state.edges.push({ id: uid() + "e", from: a, to: b, label });
-    link(ids[0], ids[1]);
-    link(ids[1], ids[2]);
-    link(ids[2], ids[3]);
-    link(ids[3], ids[4], "no");
-    link(ids[3], ids[5], "yes");
-    link(ids[5], ids[6]);
-    link(ids[6], ids[7]);
-    link(ids[4], ids[7]);
+    const connections = {
+      logic: [[0, 1], [1, 2], [2, 3], [3, 4, "no"], [3, 5, "yes"], [5, 6], [6, 7], [4, 7]],
+      bug: [[0, 1], [1, 2], [2, 3, "no"], [3, 1], [2, 4, "yes"], [4, 5], [5, 6, "no"], [6, 4], [5, 7, "yes"], [7, 8], [8, 9]],
+      feature: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5, "no"], [5, 2], [4, 6, "yes"], [6, 3, "yes"], [6, 7, "no"], [7, 8]],
+      refactor: [[0, 1], [1, 2], [2, 3, "no"], [3, 2], [2, 4, "yes"], [4, 5], [5, 6, "no"], [6, 4], [5, 7, "yes"], [7, 4, "yes"], [7, 8, "no"]],
+    };
+    (connections[kind] || connections.logic).forEach(([from, to, label]) => link(ids[from], ids[to], label));
     render();
     requestAnimationFrame(() => centerOnNodes());
   }
@@ -438,6 +488,7 @@
     const txt = document.createElement("div");
     txt.className = "pnode-text";
     txt.textContent = n.text;
+    txt.title = "Double-click to rename";
     el.appendChild(txt);
 
     txt.addEventListener("dblclick", (e) => {
@@ -449,8 +500,16 @@
       el.replaceChild(input, txt);
       input.focus();
       input.select();
+      let finished = false;
       const commit = () => {
+        if (finished) return;
+        finished = true;
         n.text = input.value.trim() || n.text;
+        render();
+      };
+      const cancel = () => {
+        if (finished) return;
+        finished = true;
         render();
       };
       input.addEventListener("blur", commit);
@@ -458,6 +517,10 @@
         if (ev.key === "Enter" && !ev.shiftKey) {
           ev.preventDefault();
           commit();
+        }
+        if (ev.key === "Escape") {
+          ev.preventDefault();
+          cancel();
         }
       });
     });
@@ -534,8 +597,12 @@
 
     el.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (state.selected === n.id) return;
       state.selected = n.id;
-      render();
+      // Do not rebuild the node here: rebuilding after the first click can
+      // swallow the second click of a title double-click.
+      inner.querySelectorAll(".pnode.selected").forEach((node) => node.classList.remove("selected"));
+      el.classList.add("selected");
     });
 
     // Dropping a connection onto this node's body (or its sockets)
@@ -661,6 +728,14 @@
     });
     wrap.addEventListener("contextmenu", (e) => {
       if (nav.space) e.preventDefault();
+    });
+    // Nodes stop their own clicks from bubbling here. Any ordinary click that
+    // reaches the canvas is therefore an intentional deselect action.
+    wrap.addEventListener("click", () => {
+      if (state.selected !== null) {
+        state.selected = null;
+        render();
+      }
     });
 
     let panning = false, panStartX, panStartY, panScrollX, panScrollY;

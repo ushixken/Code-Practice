@@ -5,20 +5,22 @@
 */
 (function () {
   const NODE_TYPES = [
-    { type: "terminal", label: "Start/End", icon: "⬭", text: "Start" },
-    { type: "io", label: "Input/Output", icon: "▱", text: "Read input" },
-    { type: "process", label: "Process", icon: "▭", text: "Do something" },
-    { type: "decision", label: "Decision", icon: "◇", text: "condition?" },
-    { type: "function", label: "Function", icon: "ƒ", text: "callFunction()" },
-    { type: "loop", label: "Loop", icon: "↻", text: "for / while" },
-    { type: "task", label: "Task / Sub-problem", icon: "☐", text: "Break this into a smaller piece" },
-    { type: "note", label: "Note", icon: "🗒", text: "Note / assumption / TODO" },
+    { type: "problem", label: "Problem / Goal", icon: "◎", text: "Describe the problem or goal", description: "Defines what this plan is trying to solve before you break it into steps." },
+    { type: "terminal", label: "Start/End", icon: "⬭", text: "Start", description: "Marks where a plan begins or the result that finishes it." },
+    { type: "io", label: "Input/Output", icon: "▱", text: "Read input", description: "Shows information entering or leaving the plan." },
+    { type: "process", label: "Process", icon: "▭", text: "Do something", description: "A single action to take or piece of work to do." },
+    { type: "decision", label: "Decision", icon: "◇", text: "condition?", description: "A question that splits the plan into different paths, such as yes and no." },
+    { type: "function", label: "Function", icon: "ƒ", text: "callFunction()", description: "A named piece of code or reusable operation involved in the plan." },
+    { type: "loop", label: "Loop", icon: "↻", text: "for / while", description: "A step or set of steps that may need repeating." },
+    { type: "task", label: "Task / Sub-problem", icon: "☐", text: "Break this into a smaller piece", description: "A small, concrete part of the problem to think through or solve." },
+    { type: "blocked", label: "Blocked / Question", icon: "?", text: "What needs to be answered?", description: "Records an unknown, decision, or missing information that prevents the plan from moving forward." },
+    { type: "note", label: "Note", icon: "🗒", text: "Note / assumption / TODO", description: "Context, an assumption, a question, or an idea that should not become a task." },
   ];
 
   // Cycles when the little status dot on a node is clicked. Purely a
   // planning aid — has no effect on the flowchart logic itself.
-  const STATUS_ORDER = ["none", "progress", "solved", "stuck"];
-  const STATUS_LABEL = { none: "Not started", progress: "In progress", solved: "Solved", stuck: "Stuck" };
+  const STATUS_ORDER = ["none", "next", "progress", "solved", "stuck"];
+  const STATUS_LABEL = { none: "Not started", next: "Next step", progress: "In progress", solved: "Solved", stuck: "Stuck" };
 
   // Fixed-but-generous canvas extent (PureRef/AutoCAD-style bounded "infinite" plane).
   // Raise these later if plans get much bigger.
@@ -96,7 +98,7 @@
     NODE_TYPES.forEach((nt) => {
       const btn = document.createElement("button");
       btn.textContent = `${nt.icon} ${nt.label}`;
-      btn.title = `Add ${nt.label} node (or drag onto the canvas to place it)`;
+      btn.title = `${nt.label}: ${nt.description} Drag onto the canvas to place it.`;
       btn.draggable = true;
       btn.addEventListener("click", () => addNode(nt.type, nt.text));
       btn.addEventListener("dragstart", (e) => {
@@ -130,6 +132,19 @@
       templatePicker.value = "";
     });
     toolbar.appendChild(templatePicker);
+
+    const guideBtn = document.createElement("button");
+    guideBtn.textContent = "ⓘ Node guide";
+    guideBtn.title = "Show what each node type is for";
+    toolbar.appendChild(guideBtn);
+
+    const guide = document.createElement("div");
+    guide.className = "planner-node-guide";
+    guide.innerHTML = NODE_TYPES.map((nt) => `
+      <div class="planner-node-guide-item"><span>${nt.icon} <strong>${nt.label}</strong></span>${nt.description}</div>
+    `).join("");
+    toolbar.insertAdjacentElement("afterend", guide);
+    guideBtn.addEventListener("click", () => guide.classList.toggle("open"));
 
     const centerBtn = document.createElement("button");
     centerBtn.textContent = "⊙ Center view";
@@ -299,7 +314,7 @@
       x: x != null ? x : center.x - 70 + jitter(),
       y: y != null ? y : center.y - 30 + jitter(),
       status: "none",
-      checklist: [],
+      notes: "",
     };
     state.nodes.push(node);
     render();
@@ -308,6 +323,20 @@
   function removeNode(id) {
     state.nodes = state.nodes.filter((n) => n.id !== id);
     state.edges = state.edges.filter((e) => e.from !== id && e.to !== id);
+    render();
+  }
+
+  function duplicateNode(node) {
+    const copy = {
+      ...node,
+      id: uid(),
+      x: Math.min(CANVAS_W - 40, node.x + 40),
+      y: Math.min(CANVAS_H - 40, node.y + 40),
+      status: "none",
+      notes: node.notes || "",
+    };
+    state.nodes.push(copy);
+    state.selected = copy.id;
     render();
   }
 
@@ -327,7 +356,7 @@
       { type: "terminal", text: "End", x: baseX + 60, y: baseY + 660 },
       ],
       bug: [
-        { type: "task", text: "Describe the problem", x: baseX + 10, y: baseY },
+        { type: "problem", text: "Describe the problem", x: baseX + 10, y: baseY },
         { type: "process", text: "Make a small reproduction", x: baseX + 10, y: baseY + 110 },
         { type: "decision", text: "Can I reproduce it?", x: baseX + 10, y: baseY + 220 },
         { type: "note", text: "Gather error details / expected behavior", x: baseX + 300, y: baseY + 220 },
@@ -339,7 +368,7 @@
         { type: "terminal", text: "Done", x: baseX + 50, y: baseY + 830 },
       ],
       feature: [
-        { type: "task", text: "State the goal", x: baseX + 10, y: baseY },
+        { type: "problem", text: "State the goal", x: baseX + 10, y: baseY },
         { type: "note", text: "Define what success looks like", x: baseX + 10, y: baseY + 100 },
         { type: "task", text: "Break it into small tasks", x: baseX + 10, y: baseY + 210 },
         { type: "process", text: "Build the smallest useful piece", x: baseX + 10, y: baseY + 320 },
@@ -350,7 +379,7 @@
         { type: "terminal", text: "Done", x: baseX + 50, y: baseY + 820 },
       ],
       refactor: [
-        { type: "task", text: "Name the pain point", x: baseX + 10, y: baseY },
+        { type: "problem", text: "Name the pain point", x: baseX + 10, y: baseY },
         { type: "note", text: "Define a safe boundary", x: baseX + 10, y: baseY + 110 },
         { type: "decision", text: "Is behavior protected?", x: baseX + 10, y: baseY + 220 },
         { type: "task", text: "Add a safety check", x: baseX + 300, y: baseY + 220 },
@@ -432,7 +461,7 @@
 
   function renderNode(inner, n) {
     if (!n.status) n.status = "none";
-    if (!n.checklist) n.checklist = [];
+    if (typeof n.notes !== "string") n.notes = "";
 
     const el = document.createElement("div");
     el.className = "pnode";
@@ -473,6 +502,17 @@
       render();
     });
     el.appendChild(status);
+
+    const duplicate = document.createElement("div");
+    duplicate.className = "pnode-duplicate";
+    duplicate.textContent = "⧉";
+    duplicate.title = "Duplicate node";
+    duplicate.addEventListener("mousedown", (e) => e.stopPropagation());
+    duplicate.addEventListener("click", (e) => {
+      e.stopPropagation();
+      duplicateNode(n);
+    });
+    el.appendChild(duplicate);
 
     const del = document.createElement("div");
     del.className = "pnode-delete";
@@ -525,60 +565,22 @@
       });
     });
 
-    // Checklist: freeform sub-items for breaking a node down further —
-    // "handle negative numbers", "handle empty input", etc — that can be
-    // checked off while working the problem without needing a separate node.
-    const checklist = document.createElement("div");
-    checklist.className = "pnode-checklist";
-    checklist.addEventListener("mousedown", (e) => e.stopPropagation());
-    checklist.addEventListener("click", (e) => e.stopPropagation());
-
-    n.checklist.forEach((item, idx) => {
-      const row = document.createElement("label");
-      row.className = "pnode-check-row";
-      const box = document.createElement("input");
-      box.type = "checkbox";
-      box.checked = !!item.done;
-      box.addEventListener("change", () => {
-        item.done = box.checked;
-        render();
-      });
-      const label = document.createElement("span");
-      label.textContent = item.text;
-      if (item.done) label.classList.add("done");
-      const rm = document.createElement("span");
-      rm.className = "pnode-check-remove";
-      rm.textContent = "✕";
-      rm.title = "Remove item";
-      rm.addEventListener("click", (e) => {
-        e.stopPropagation();
-        n.checklist.splice(idx, 1);
-        render();
-      });
-      row.appendChild(box);
-      row.appendChild(label);
-      row.appendChild(rm);
-      checklist.appendChild(row);
-    });
-
-    const addRow = document.createElement("div");
-    addRow.className = "pnode-check-add";
-    const addInput = document.createElement("input");
-    addInput.type = "text";
-    addInput.placeholder = "+ add sub-item";
-    addInput.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter") {
-        ev.preventDefault();
-        const text = addInput.value.trim();
-        if (text) {
-          n.checklist.push({ text, done: false });
-          render();
-        }
-      }
-    });
-    addRow.appendChild(addInput);
-    checklist.appendChild(addRow);
-    el.appendChild(checklist);
+    const notes = document.createElement("details");
+    notes.className = "pnode-notes";
+    notes.open = Boolean(n.notes);
+    const summary = document.createElement("summary");
+    summary.textContent = "Notes";
+    summary.title = "Add planning notes, assumptions, or questions";
+    const noteInput = document.createElement("textarea");
+    noteInput.placeholder = "Assumptions, questions, clues…";
+    noteInput.value = n.notes;
+    noteInput.rows = 3;
+    noteInput.addEventListener("mousedown", (e) => e.stopPropagation());
+    noteInput.addEventListener("click", (e) => e.stopPropagation());
+    noteInput.addEventListener("input", () => { n.notes = noteInput.value; });
+    notes.appendChild(summary);
+    notes.appendChild(noteInput);
+    el.appendChild(notes);
 
     const outSocket = document.createElement("div");
     outSocket.className = "pnode-socket socket-out";
@@ -629,10 +631,11 @@
     let sx, sy, ox, oy, dragging = false;
     el.addEventListener("mousedown", (e) => {
       if (e.target.classList.contains("pnode-delete")) return;
+      if (e.target.classList.contains("pnode-duplicate")) return;
       if (e.target.classList.contains("pnode-edit")) return;
       if (e.target.classList.contains("pnode-socket")) return;
       if (e.target.classList.contains("pnode-status")) return;
-      if (e.target.closest(".pnode-checklist")) return;
+      if (e.target.closest(".pnode-notes")) return;
       dragging = true;
       sx = e.clientX;
       sy = e.clientY;
@@ -697,8 +700,8 @@
 
   function setupPanZoom(wrap) {
     // Don't hijack Space for panning while the user is actually typing
-    // anywhere on the page — the node-text editor, the checklist's
-    // add-item input, or any other text field/input/contenteditable.
+    // anywhere on the page — a node title editor, planning-notes field,
+    // or any other text field/input/contenteditable.
     function isTypingTarget(target) {
       if (!target) return false;
       const tag = target.tagName;

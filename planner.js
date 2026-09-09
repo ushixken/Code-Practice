@@ -489,8 +489,40 @@
     });
     window.addEventListener("mousemove", (e) => {
       if (!dragging) return;
-      n.x = Math.min(CANVAS_W - 40, Math.max(0, ox + (e.clientX - sx) / state.zoom));
-      n.y = Math.min(CANVAS_H - 40, Math.max(0, oy + (e.clientY - sy) / state.zoom));
+      let x = Math.min(CANVAS_W - 40, Math.max(0, ox + (e.clientX - sx) / state.zoom));
+      let y = Math.min(CANVAS_H - 40, Math.max(0, oy + (e.clientY - sy) / state.zoom));
+
+      // Snap to the nodes this one is connected to: if moving it puts its
+      // center within SNAP_PX of a connected node's center on one axis,
+      // lock onto that axis so the arrow between them ends up perfectly
+      // horizontal or vertical instead of a slight diagonal.
+      const inner = document.getElementById("plannerCanvasInner");
+      if (inner) {
+        const rect = el.getBoundingClientRect();
+        const z = state.zoom || 1;
+        const w = rect.width / z;
+        const h = rect.height / z;
+        const centerX = x + w / 2;
+        const centerY = y + h / 2;
+        const connectedIds = new Set();
+        state.edges.forEach((edge) => {
+          if (edge.from === n.id) connectedIds.add(edge.to);
+          if (edge.to === n.id) connectedIds.add(edge.from);
+        });
+        let snappedX = null, snappedY = null;
+        connectedIds.forEach((id) => {
+          const otherEl = inner.querySelector(`.pnode[data-id="${id}"]`);
+          if (!otherEl) return;
+          const otherCenter = nodeCenterCanvas(otherEl);
+          if (snappedX === null && Math.abs(centerX - otherCenter.x) <= SNAP_PX) snappedX = otherCenter.x;
+          if (snappedY === null && Math.abs(centerY - otherCenter.y) <= SNAP_PX) snappedY = otherCenter.y;
+        });
+        if (snappedX !== null) x = snappedX - w / 2;
+        if (snappedY !== null) y = snappedY - h / 2;
+      }
+
+      n.x = x;
+      n.y = y;
       el.style.left = n.x + "px";
       el.style.top = n.y + "px";
       drawEdges();
@@ -687,6 +719,19 @@
     return { x, y };
   }
 
+  // If the mouse is nearly horizontally or vertically aligned with a fixed
+  // reference point (within SNAP_PX), pull it exactly onto that axis so the
+  // live preview line locks to a clean horizontal/vertical instead of a
+  // slightly-off diagonal.
+  const SNAP_PX = 10;
+  function snapToAxis(mouseP, refP) {
+    const dx = mouseP.x - refP.x;
+    const dy = mouseP.y - refP.y;
+    if (Math.abs(dy) <= SNAP_PX) return { x: mouseP.x, y: refP.y };
+    if (Math.abs(dx) <= SNAP_PX) return { x: refP.x, y: mouseP.y };
+    return mouseP;
+  }
+
   function drawEdges(liveMouseEvent) {
     const svg = document.getElementById("plannerSvg");
     const inner = document.getElementById("plannerCanvasInner");
@@ -715,8 +760,38 @@
       const toCenter = nodeCenterCanvas(toEl);
       const outList = outGroups.get(edge.from) || [edge];
       const inList = inGroups.get(edge.to) || [edge];
-      const p1 = edgeAnchor(fromEl, toCenter.x, toCenter.y, outList.indexOf(edge), outList.length);
-      const p2 = edgeAnchor(toEl, fromCenter.x, fromCenter.y, inList.indexOf(edge), inList.length);
+
+      // Two different shapes (e.g. a diamond vs. a rectangle) rarely share
+      // the exact same visual center even when placed at the same y, since
+      // their box heights differ — so an "intended" horizontal/vertical
+      // connection ends up a few pixels diagonal. If the two centers are
+      // already close on one axis, aim each node's own anchor calc dead-on
+      // that axis (dy or dx forced to 0) and then pin both resulting points
+      // to one shared coordinate, guaranteeing a perfectly straight line.
+      let towardForFrom = toCenter;
+      let towardForTo = fromCenter;
+      const alignedHorizontally = Math.abs(fromCenter.y - toCenter.y) <= SNAP_PX;
+      const alignedVertically = !alignedHorizontally && Math.abs(fromCenter.x - toCenter.x) <= SNAP_PX;
+      if (alignedHorizontally) {
+        towardForFrom = { x: toCenter.x, y: fromCenter.y };
+        towardForTo = { x: fromCenter.x, y: toCenter.y };
+      } else if (alignedVertically) {
+        towardForFrom = { x: fromCenter.x, y: toCenter.y };
+        towardForTo = { x: toCenter.x, y: fromCenter.y };
+      }
+
+      const p1 = edgeAnchor(fromEl, towardForFrom.x, towardForFrom.y, outList.indexOf(edge), outList.length);
+      const p2 = edgeAnchor(toEl, towardForTo.x, towardForTo.y, inList.indexOf(edge), inList.length);
+
+      if (alignedHorizontally) {
+        const y = (fromCenter.y + toCenter.y) / 2;
+        p1.y = y;
+        p2.y = y;
+      } else if (alignedVertically) {
+        const x = (fromCenter.x + toCenter.x) / 2;
+        p1.x = x;
+        p2.x = x;
+      }
 
       drawBezier(svg, p1.x, p1.y, p2.x, p2.y, "pedge", edge.label, false, (e) => startDetach(e, edge, p1, p2));
     });
@@ -724,13 +799,14 @@
     // Live line while dragging a new connection from a socket, Nuke-style
     if (linking.active && (linking.fromId || linking.toId) && liveMouseEvent) {
       const innerRect = inner.getBoundingClientRect();
-      const mouseP = {
+      let mouseP = {
         x: (liveMouseEvent.clientX - innerRect.left) / z,
         y: (liveMouseEvent.clientY - innerRect.top) / z,
       };
       if (linking.fromId) {
         const fromEl = inner.querySelector(`.pnode[data-id="${linking.fromId}"]`);
         if (fromEl) {
+          mouseP = snapToAxis(mouseP, nodeCenterCanvas(fromEl));
           const outList = outGroups.get(linking.fromId) || [];
           const p1 = edgeAnchor(fromEl, mouseP.x, mouseP.y, outList.length, outList.length + 1);
           drawBezier(svg, p1.x, p1.y, mouseP.x, mouseP.y, "pedge-live", "", true);
@@ -738,6 +814,7 @@
       } else if (linking.toId) {
         const toEl = inner.querySelector(`.pnode[data-id="${linking.toId}"]`);
         if (toEl) {
+          mouseP = snapToAxis(mouseP, nodeCenterCanvas(toEl));
           const inList = inGroups.get(linking.toId) || [];
           const p2 = edgeAnchor(toEl, mouseP.x, mouseP.y, inList.length, inList.length + 1);
           drawBezier(svg, mouseP.x, mouseP.y, p2.x, p2.y, "pedge-live", "", true);
@@ -755,10 +832,11 @@
         const isOutputEnd = detaching.movingEnd === "to"; // fixed end is the source (tail)
         const group = isOutputEnd ? outGroups.get(detaching.fixedId) || [] : inGroups.get(detaching.fixedId) || [];
         const innerRect = inner.getBoundingClientRect();
-        const mouseP = {
+        let mouseP = {
           x: (liveMouseEvent.clientX - innerRect.left) / z,
           y: (liveMouseEvent.clientY - innerRect.top) / z,
         };
+        mouseP = snapToAxis(mouseP, nodeCenterCanvas(fixedEl));
         const fixedP = edgeAnchor(fixedEl, mouseP.x, mouseP.y, group.length, group.length + 1);
         const p1 = isOutputEnd ? fixedP : mouseP;
         const p2 = isOutputEnd ? mouseP : fixedP;

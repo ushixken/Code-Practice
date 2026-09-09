@@ -498,10 +498,10 @@ const ROADMAP = [
   {
     id: "values",
     level: "easy",
-    title: "Your First Variable",
-    summary: "Store one value, then print it with console.log()",
+    title: "Variables in Practice",
+    summary: "Use const to store a value, then print it with console.log()",
     content: `
-      <p>A <b>variable</b> is a named place where JavaScript stores a value. Start with one value and one clear name.</p>
+      <p>Now that you know <code>const</code>, practice using it to store one value with one clear name.</p>
       <div class="example"><b>const city = "Manila";<br>console.log(city);</b></div>
       <p>Use <code>const</code> when the value will stay the same. The word <code>city</code> is a name we chose; it helps us remember what the value means. Later, you will learn when to use <code>let</code> for values that change.</p>
     `,

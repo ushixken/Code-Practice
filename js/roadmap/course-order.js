@@ -3,8 +3,8 @@
 window.ROADMAP_ORDER = [
   "firstProgram",
   "consolePractice",
-  "values",
   "variables",
+  "values",
   "dataTypes",
   "operators",
   "conditionals",

@@ -36,6 +36,10 @@
     selected: null,
     zoom: 1,
   };
+  const history = [];
+  const redoHistory = [];
+  const HISTORY_LIMIT = 60;
+  let arrowLabelModal = null;
 
   // Navigation modifier keys
   const nav = { space: false, ctrl: false };
@@ -44,6 +48,9 @@
   // from an input socket sets toId instead (line follows the mouse as the
   // "from" end) — same live-preview/drop logic, just mirrored.
   const linking = { active: false, fromId: null, toId: null };
+  // A template can be placed as a ghost group before it is committed to the
+  // canvas, keeping the user's existing plan intact until they choose a spot.
+  const templatePlacement = { kind: null, ghosts: [], hint: null, minX: 0, minY: 0 };
   // Detaching an existing edge: grab the end nearest the cursor and drag it
   // loose, Nuke-style — drop on another node to rewire, or on empty canvas
   // to disconnect.
@@ -57,6 +64,31 @@
   }
 
   function uid() { return "n" + state.nextId++; }
+
+  function saveHistory() {
+    history.push(JSON.stringify(state));
+    if (history.length > HISTORY_LIMIT) history.shift();
+    redoHistory.length = 0;
+  }
+
+  function undo() {
+    const previous = history.pop();
+    if (!previous) return;
+    redoHistory.push(JSON.stringify(state));
+    state = JSON.parse(previous);
+    clearTemplatePreview();
+    render();
+  }
+
+  function redo() {
+    const next = redoHistory.pop();
+    if (!next) return;
+    history.push(JSON.stringify(state));
+    if (history.length > HISTORY_LIMIT) history.shift();
+    state = JSON.parse(next);
+    clearTemplatePreview();
+    render();
+  }
 
   // ---------- Build DOM shell ----------
   function buildShell() {
@@ -115,9 +147,10 @@
 
     const templatePicker = document.createElement("select");
     templatePicker.className = "planner-template-picker";
-    templatePicker.title = "Replace the canvas with a planning template";
+    templatePicker.title = "Choose a planning template";
     templatePicker.innerHTML = `
       <option value="" selected disabled>✨ Plan template</option>
+      <option value="sample">Sample: solve a problem</option>
       <option value="bug">Bug fix</option>
       <option value="feature">New feature</option>
       <option value="refactor">Refactor</option>
@@ -126,12 +159,105 @@
     templatePicker.addEventListener("change", () => {
       const kind = templatePicker.value;
       if (!kind) return;
-      if (!state.nodes.length || confirm("Replace the current plan with this template?")) {
-        insertTemplate(kind);
-      }
+      templateModal.dataset.kind = kind;
+      templateModal.querySelector(".planner-template-modal-name").textContent = templatePicker.options[templatePicker.selectedIndex].text;
+      templateModal.classList.add("open");
       templatePicker.value = "";
     });
     toolbar.appendChild(templatePicker);
+
+    const undoBtn = document.createElement("button");
+    undoBtn.textContent = "↶ Undo";
+    undoBtn.title = "Undo the last planning change (Ctrl/Cmd + Z)";
+    undoBtn.addEventListener("click", undo);
+    toolbar.appendChild(undoBtn);
+
+    const redoBtn = document.createElement("button");
+    redoBtn.textContent = "↷ Redo";
+    redoBtn.title = "Redo the last undone planning change (Ctrl/Cmd + Shift + Z or Ctrl + Y)";
+    redoBtn.addEventListener("click", redo);
+    toolbar.appendChild(redoBtn);
+
+    const deleteSelectedBtn = document.createElement("button");
+    deleteSelectedBtn.textContent = "⌫ Delete selected";
+    deleteSelectedBtn.title = "Delete the selected node (Backspace or Delete)";
+    deleteSelectedBtn.addEventListener("click", () => {
+      if (state.selected) removeNode(state.selected);
+    });
+    toolbar.appendChild(deleteSelectedBtn);
+
+    const templateModal = document.createElement("div");
+    templateModal.className = "planner-template-modal";
+    templateModal.innerHTML = `
+      <div class="planner-template-modal-card" role="dialog" aria-modal="true" aria-label="Choose template placement">
+        <strong><span class="planner-template-modal-name"></span> template</strong>
+        <p>Start a fresh plan, or place a ghost preview into your current canvas.</p>
+        <div class="planner-template-modal-actions">
+          <button type="button" data-template-action="new">New canvas</button>
+          <button type="button" data-template-action="insert">Insert into canvas</button>
+          <button type="button" data-template-action="cancel">Cancel</button>
+        </div>
+      </div>
+    `;
+    templateModal.addEventListener("click", (e) => {
+      if (e.target === templateModal || e.target.dataset.templateAction === "cancel") {
+        templateModal.classList.remove("open");
+        return;
+      }
+      const action = e.target.dataset.templateAction;
+      const kind = templateModal.dataset.kind;
+      if (action === "new") {
+        insertTemplate(kind);
+        templateModal.classList.remove("open");
+      }
+      if (action === "insert") {
+        startTemplatePlacement(kind);
+        templateModal.classList.remove("open");
+      }
+    });
+    panel.appendChild(templateModal);
+
+    arrowLabelModal = document.createElement("div");
+    arrowLabelModal.className = "planner-arrow-label-modal";
+    arrowLabelModal.innerHTML = `
+      <div class="planner-arrow-label-card" role="dialog" aria-modal="true" aria-label="Edit arrow label">
+        <div class="planner-arrow-label-icon">↗</div>
+        <div>
+          <strong>Arrow label</strong>
+          <p>Describe this path, such as <em>yes</em>, <em>no</em>, <em>retry</em>, or <em>fails</em>.</p>
+        </div>
+        <input class="planner-arrow-label-input" type="text" maxlength="60" placeholder="Type a label…" autocomplete="off">
+        <div class="planner-arrow-label-actions">
+          <button type="button" data-arrow-label-action="cancel">Cancel</button>
+          <button type="button" data-arrow-label-action="save">Save label</button>
+        </div>
+      </div>
+    `;
+    const closeArrowLabelModal = () => arrowLabelModal.classList.remove("open");
+    arrowLabelModal.addEventListener("click", (e) => {
+      const action = e.target.dataset.arrowLabelAction;
+      if (e.target === arrowLabelModal || action === "cancel") {
+        closeArrowLabelModal();
+        return;
+      }
+      if (action === "save") {
+        const edge = arrowLabelModal._edge;
+        if (edge) {
+          const label = arrowLabelModal.querySelector(".planner-arrow-label-input").value.trim();
+          if (label !== edge.label) {
+            saveHistory();
+            edge.label = label;
+            render();
+          }
+        }
+        closeArrowLabelModal();
+      }
+    });
+    arrowLabelModal.querySelector(".planner-arrow-label-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") arrowLabelModal.querySelector('[data-arrow-label-action="save"]').click();
+      if (e.key === "Escape") closeArrowLabelModal();
+    });
+    panel.appendChild(arrowLabelModal);
 
     const guideBtn = document.createElement("button");
     guideBtn.textContent = "ⓘ Node guide";
@@ -142,7 +268,10 @@
     guide.className = "planner-node-guide";
     guide.innerHTML = NODE_TYPES.map((nt) => `
       <div class="planner-node-guide-item"><span>${nt.icon} <strong>${nt.label}</strong></span>${nt.description}</div>
-    `).join("");
+    `).join("") + `
+      <div class="planner-node-guide-item"><span>↔ <strong>Arrows</strong></span>Drag an arrow end to reconnect it. Shift-click an arrow to reverse it, or Alt-click it to add a branch label.</div>
+      <div class="planner-node-guide-item"><span>● <strong>Status dot</strong></span>Click the dot to cycle: gray not started, blue next step, gold in progress, green solved, red blocked.</div>
+    `;
     toolbar.insertAdjacentElement("afterend", guide);
     guideBtn.addEventListener("click", () => guide.classList.toggle("open"));
 
@@ -166,6 +295,7 @@
     clearBtn.textContent = "🗑 Clear";
     clearBtn.addEventListener("click", () => {
       if (confirm("Clear the whole plan?")) {
+        saveHistory();
         state.nodes = [];
         state.edges = [];
         render();
@@ -305,6 +435,7 @@
   }
 
   function addNode(type, defaultText, x, y) {
+    saveHistory();
     const center = currentViewCenter();
     const jitter = () => (Math.random() - 0.5) * 60;
     const node = {
@@ -321,12 +452,14 @@
   }
 
   function removeNode(id) {
+    saveHistory();
     state.nodes = state.nodes.filter((n) => n.id !== id);
     state.edges = state.edges.filter((e) => e.from !== id && e.to !== id);
     render();
   }
 
   function duplicateNode(node) {
+    saveHistory();
     const copy = {
       ...node,
       id: uid(),
@@ -340,10 +473,7 @@
     render();
   }
 
-  function insertTemplate(kind = "logic") {
-    state.nodes = [];
-    state.edges = [];
-    const baseX = CANVAS_ORIGIN_X - 100, baseY = CANVAS_ORIGIN_Y - 340;
+  function templateDefinition(kind, baseX, baseY) {
     const templates = {
       logic: [
       { type: "terminal", text: "Start", x: baseX + 60, y: baseY + 0 },
@@ -354,6 +484,18 @@
       { type: "process", text: "Run core logic", x: baseX + 20, y: baseY + 450 },
       { type: "io", text: "Print / return output", x: baseX + 20, y: baseY + 560 },
       { type: "terminal", text: "End", x: baseX + 60, y: baseY + 660 },
+      ],
+      sample: [
+        { type: "problem", text: "Problem: app saves duplicate items", x: baseX + 10, y: baseY },
+        { type: "note", text: "Known: it happens after a slow connection", x: baseX + 300, y: baseY },
+        { type: "task", text: "Make a small reproduction", x: baseX + 10, y: baseY + 120 },
+        { type: "io", text: "Record input and output", x: baseX + 10, y: baseY + 230 },
+        { type: "decision", text: "Can I reproduce it?", x: baseX + 10, y: baseY + 340 },
+        { type: "blocked", text: "Ask for logs if it cannot reproduce", x: baseX + 310, y: baseY + 340 },
+        { type: "function", text: "Inspect saveItem()", x: baseX + 10, y: baseY + 480 },
+        { type: "loop", text: "Repeat with one changed variable", x: baseX + 10, y: baseY + 590 },
+        { type: "process", text: "Apply the smallest safe fix", x: baseX + 10, y: baseY + 700 },
+        { type: "terminal", text: "End: verify the fix", x: baseX + 40, y: baseY + 810 },
       ],
       bug: [
         { type: "problem", text: "Describe the problem", x: baseX + 10, y: baseY },
@@ -391,21 +533,86 @@
       ],
     };
     const seq = templates[kind] || templates.logic;
-    const ids = seq.map((n) => {
-      const id = uid();
-      state.nodes.push({ id, ...n });
-      return id;
-    });
-    const link = (a, b, label) => state.edges.push({ id: uid() + "e", from: a, to: b, label });
-    const connections = {
+    const templateConnections = {
       logic: [[0, 1], [1, 2], [2, 3], [3, 4, "no"], [3, 5, "yes"], [5, 6], [6, 7], [4, 7]],
+      sample: [[0, 1], [0, 2], [2, 3], [3, 4], [4, 5, "no"], [4, 6, "yes"], [6, 7], [7, 6, "repeat"], [7, 8], [8, 9]],
       bug: [[0, 1], [1, 2], [2, 3, "no"], [3, 1], [2, 4, "yes"], [4, 5], [5, 6, "no"], [6, 4], [5, 7, "yes"], [7, 8], [8, 9]],
       feature: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5, "no"], [5, 2], [4, 6, "yes"], [6, 3, "yes"], [6, 7, "no"], [7, 8]],
       refactor: [[0, 1], [1, 2], [2, 3, "no"], [3, 2], [2, 4, "yes"], [4, 5], [5, 6, "no"], [6, 4], [5, 7, "yes"], [7, 4, "yes"], [7, 8, "no"]],
     };
-    (connections[kind] || connections.logic).forEach(([from, to, label]) => link(ids[from], ids[to], label));
+    return { seq, connections: templateConnections[kind] || templateConnections.logic };
+  }
+
+  function insertTemplate(kind = "logic", options = {}) {
+    saveHistory();
+    const clear = options.clear !== false;
+    if (clear) {
+      state.nodes = [];
+      state.edges = [];
+    }
+    const baseX = options.baseX ?? CANVAS_ORIGIN_X - 100;
+    const baseY = options.baseY ?? CANVAS_ORIGIN_Y - 340;
+    const { seq, connections } = templateDefinition(kind, baseX, baseY);
+    const ids = seq.map((n) => {
+      const id = uid();
+      state.nodes.push({ id, status: "none", notes: "", ...n });
+      return id;
+    });
+    const link = (a, b, label) => state.edges.push({ id: uid() + "e", from: a, to: b, label });
+    connections.forEach(([from, to, label]) => link(ids[from], ids[to], label));
     render();
-    requestAnimationFrame(() => centerOnNodes());
+    if (clear) requestAnimationFrame(() => centerOnNodes());
+  }
+
+  function clearTemplatePreview() {
+    templatePlacement.ghosts.forEach((ghost) => ghost.remove());
+    if (templatePlacement.hint) templatePlacement.hint.remove();
+    templatePlacement.kind = null;
+    templatePlacement.ghosts = [];
+    templatePlacement.hint = null;
+    const wrap = document.getElementById("plannerCanvasWrap");
+    if (wrap) wrap.classList.remove("template-placing");
+  }
+
+  function updateTemplatePreview(x, y) {
+    const { kind, ghosts, minX, minY } = templatePlacement;
+    if (!kind) return;
+    const { seq } = templateDefinition(kind, 0, 0);
+    ghosts.forEach((ghost, index) => {
+      ghost.style.left = x + seq[index].x - minX + "px";
+      ghost.style.top = y + seq[index].y - minY + "px";
+    });
+    if (templatePlacement.hint) {
+      templatePlacement.hint.style.left = x + "px";
+      templatePlacement.hint.style.top = Math.max(0, y - 30) + "px";
+    }
+  }
+
+  function startTemplatePlacement(kind) {
+    clearTemplatePreview();
+    const inner = document.getElementById("plannerCanvasInner");
+    const wrap = document.getElementById("plannerCanvasWrap");
+    if (!inner || !wrap) return;
+    const { seq } = templateDefinition(kind, 0, 0);
+    templatePlacement.kind = kind;
+    templatePlacement.minX = Math.min(...seq.map((node) => node.x));
+    templatePlacement.minY = Math.min(...seq.map((node) => node.y));
+    templatePlacement.ghosts = seq.map((node) => {
+      const ghost = document.createElement("div");
+      ghost.className = "pnode pnode-template-preview";
+      ghost.dataset.type = node.type;
+      ghost.innerHTML = `<div class="pnode-text">${node.text}</div>`;
+      inner.appendChild(ghost);
+      return ghost;
+    });
+    const hint = document.createElement("div");
+    hint.className = "planner-template-placement-hint";
+    hint.textContent = "Click to place · Esc to cancel · Space + drag to pan";
+    inner.appendChild(hint);
+    templatePlacement.hint = hint;
+    wrap.classList.add("template-placing");
+    const center = currentViewCenter();
+    updateTemplatePreview(center.x, center.y);
   }
 
   // ---------- Centering / view ----------
@@ -497,6 +704,7 @@
     status.addEventListener("mousedown", (e) => e.stopPropagation());
     status.addEventListener("click", (e) => {
       e.stopPropagation();
+      saveHistory();
       const idx = STATUS_ORDER.indexOf(n.status);
       n.status = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
       render();
@@ -544,6 +752,7 @@
       const commit = () => {
         if (finished) return;
         finished = true;
+        if (input.value.trim() && input.value.trim() !== n.text) saveHistory();
         n.text = input.value.trim() || n.text;
         render();
       };
@@ -577,7 +786,15 @@
     noteInput.rows = 3;
     noteInput.addEventListener("mousedown", (e) => e.stopPropagation());
     noteInput.addEventListener("click", (e) => e.stopPropagation());
-    noteInput.addEventListener("input", () => { n.notes = noteInput.value; });
+    let noteHistorySaved = false;
+    noteInput.addEventListener("focus", () => { noteHistorySaved = false; });
+    noteInput.addEventListener("input", () => {
+      if (!noteHistorySaved) {
+        saveHistory();
+        noteHistorySaved = true;
+      }
+      n.notes = noteInput.value;
+    });
     notes.appendChild(summary);
     notes.appendChild(noteInput);
     el.appendChild(notes);
@@ -609,6 +826,9 @@
 
     // Dropping a connection onto this node's body (or its sockets)
     el.addEventListener("mouseup", (e) => {
+      const changesPlan = (linking.active && ((linking.fromId && linking.fromId !== n.id) || (linking.toId && linking.toId !== n.id))) ||
+        (detaching.active && detaching.fixedId && detaching.fixedId !== n.id);
+      if (changesPlan && !detaching.active) saveHistory();
       if (linking.active && linking.fromId && linking.fromId !== n.id) {
         state.edges.push({ id: uid() + "e", from: linking.fromId, to: n.id, label: "" });
       }
@@ -628,7 +848,7 @@
   }
 
   function makeNodeDraggable(el, n) {
-    let sx, sy, ox, oy, dragging = false;
+    let sx, sy, ox, oy, dragging = false, moveHistorySaved = false;
     el.addEventListener("mousedown", (e) => {
       if (e.target.classList.contains("pnode-delete")) return;
       if (e.target.classList.contains("pnode-duplicate")) return;
@@ -641,10 +861,15 @@
       sy = e.clientY;
       ox = n.x;
       oy = n.y;
+      moveHistorySaved = false;
       e.stopPropagation();
     });
     window.addEventListener("mousemove", (e) => {
       if (!dragging) return;
+      if (!moveHistorySaved && (e.clientX !== sx || e.clientY !== sy)) {
+        saveHistory();
+        moveHistorySaved = true;
+      }
       let x = Math.min(CANVAS_W - 40, Math.max(0, ox + (e.clientX - sx) / state.zoom));
       let y = Math.min(CANVAS_H - 40, Math.max(0, oy + (e.clientY - sy) / state.zoom));
 
@@ -708,6 +933,28 @@
       return tag === "TEXTAREA" || tag === "INPUT" || target.isContentEditable;
     }
     window.addEventListener("keydown", (e) => {
+      const isUndo = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey;
+      const isRedo = ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && e.shiftKey) ||
+        (e.ctrlKey && e.key.toLowerCase() === "y");
+      if (isUndo && !isTypingTarget(e.target)) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      if (isRedo && !isTypingTarget(e.target)) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      if ((e.key === "Delete" || e.key === "Backspace") && !isTypingTarget(e.target) && state.selected) {
+        e.preventDefault();
+        removeNode(state.selected);
+        return;
+      }
+      if (e.key === "Escape" && templatePlacement.kind) {
+        clearTemplatePreview();
+        return;
+      }
       if (e.code === "Space") {
         if (isTypingTarget(e.target)) return;
         nav.space = true;
@@ -734,7 +981,17 @@
     });
     // Nodes stop their own clicks from bubbling here. Any ordinary click that
     // reaches the canvas is therefore an intentional deselect action.
-    wrap.addEventListener("click", () => {
+    wrap.addEventListener("click", (e) => {
+      if (templatePlacement.kind && !nav.space) {
+        const inner = document.getElementById("plannerCanvasInner");
+        const rect = inner.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / state.zoom;
+        const y = (e.clientY - rect.top) / state.zoom;
+        const { kind, minX, minY } = templatePlacement;
+        clearTemplatePreview();
+        insertTemplate(kind, { clear: false, baseX: x - minX, baseY: y - minY });
+        return;
+      }
       if (state.selected !== null) {
         state.selected = null;
         render();
@@ -774,6 +1031,13 @@
       }
     });
     window.addEventListener("mousemove", (e) => {
+      if (templatePlacement.kind) {
+        const inner = document.getElementById("plannerCanvasInner");
+        if (inner) {
+          const rect = inner.getBoundingClientRect();
+          updateTemplatePreview((e.clientX - rect.left) / state.zoom, (e.clientY - rect.top) / state.zoom);
+        }
+      }
       if (panning) {
         wrap.scrollLeft = panScrollX - (e.clientX - panStartX);
         wrap.scrollTop = panScrollY - (e.clientY - panStartY);
@@ -1021,6 +1285,7 @@
   // Shared teardown: pull the edge out of state and mark one end as the
   // "moving" end being dragged loose, the other as the fixed anchor.
   function beginDetach(edge, movingEnd) {
+    saveHistory();
     detaching.active = true;
     detaching.edgeId = edge.id;
     detaching.movingEnd = movingEnd;
@@ -1037,6 +1302,16 @@
   function startDetach(e, edge, p1, p2) {
     e.stopPropagation();
     e.preventDefault();
+    if (e.shiftKey) {
+      saveHistory();
+      [edge.from, edge.to] = [edge.to, edge.from];
+      render();
+      return;
+    }
+    if (e.altKey) {
+      openArrowLabelModal(edge);
+      return;
+    }
     const inner = document.getElementById("plannerCanvasInner");
     const innerRect = inner.getBoundingClientRect();
     const z = state.zoom || 1;
@@ -1045,6 +1320,18 @@
     const dFrom = Math.hypot(mx - p1.x, my - p1.y);
     const dTo = Math.hypot(mx - p2.x, my - p2.y);
     beginDetach(edge, dTo <= dFrom ? "to" : "from");
+  }
+
+  function openArrowLabelModal(edge) {
+    if (!arrowLabelModal) return;
+    const input = arrowLabelModal.querySelector(".planner-arrow-label-input");
+    arrowLabelModal._edge = edge;
+    input.value = edge.label || "";
+    arrowLabelModal.classList.add("open");
+    requestAnimationFrame(() => {
+      input.focus();
+      input.select();
+    });
   }
 
   function drawBezier(svg, x1, y1, x2, y2, cls, label, isLive, onGrab) {
@@ -1060,6 +1347,9 @@
     path.setAttribute("stroke-width", "1.6");
     if (isLive) path.setAttribute("stroke-dasharray", "5,4");
     path.setAttribute("marker-end", "url(#arrowHead)");
+    const help = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    help.textContent = "Drag an end to reconnect · Shift-click to reverse · Alt-click to label";
+    path.appendChild(help);
     svg.appendChild(path);
 
     // A wide, invisible path on top of the visible one makes the thin line

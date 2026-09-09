@@ -53,6 +53,15 @@ function escapeHtml(value) {
 }
 
 function highlightCode(code) {
+  // Muted until a const, let, or var name is used somewhere else in the code.
+  const declaredNames = [...code.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g)]
+    .map((match) => match[1])
+  const unusedNames = new Set(
+    declaredNames.filter((name) => {
+      const uses = code.match(new RegExp(`\\b${name}\\b`, "g")) || []
+      return uses.length === 1
+    }),
+  )
   const tokenRe =
     /(\/\/[^\n]*)|(\/\*[\s\S]*?\*\/)|('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)|(\b\d+\.?\d*\b)|([A-Za-z_$][A-Za-z0-9_$]*)|([{}()[\];,.:?])|(\s+)|([^\s\w])/g
   let output = ""
@@ -80,6 +89,8 @@ function highlightCode(code) {
         output += `<span class="tok-keyword">${escapeHtml(full)}</span>`
       else if (JS_BOOLEANS.has(identifier))
         output += `<span class="tok-boolean">${escapeHtml(full)}</span>`
+      else if (unusedNames.has(identifier))
+        output += `<span class="tok-unused">${escapeHtml(full)}</span>`
       else
         output += /^\s*\(/.test(code.slice(tokenRe.lastIndex))
           ? `<span class="tok-function">${escapeHtml(full)}</span>`

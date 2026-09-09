@@ -982,6 +982,9 @@ body {
 .roadmap-practical-library.is-practicing .roadmap-practical-start {
   display: none;
 }
+.tok-unused {
+  color: #69706d;
+}
 
 /* ===== Right panel: problem description ===== */
 .rightpanel {

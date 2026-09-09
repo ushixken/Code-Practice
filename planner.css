@@ -318,6 +318,18 @@
   border-color: transparent;
   box-shadow: none;
 }
+/* clip-path on the ::before shape layer clips away anything painted outside
+   its own box — including a box-shadow, since a shadow by definition
+   extends past the box edges. So the selection/linking glow has to live on
+   this outer, unclipped element instead of the ::before shape layer. */
+.pnode[data-type="decision"].selected,
+.pnode[data-type="io"].selected {
+  box-shadow: 0 0 0 2px rgba(227, 161, 63, 0.35);
+}
+.pnode[data-type="decision"].linking-source,
+.pnode[data-type="io"].linking-source {
+  box-shadow: 0 0 0 2px rgba(106, 176, 243, 0.4);
+}
 .pnode[data-type="decision"]::before,
 .pnode[data-type="io"]::before {
   content: "";

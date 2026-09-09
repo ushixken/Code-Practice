@@ -629,10 +629,19 @@
   }
 
   function setupPanZoom(wrap) {
+    // Don't hijack Space for panning while the user is actually typing
+    // anywhere on the page — the node-text editor, the checklist's
+    // add-item input, or any other text field/input/contenteditable.
+    function isTypingTarget(target) {
+      if (!target) return false;
+      const tag = target.tagName;
+      return tag === "TEXTAREA" || tag === "INPUT" || target.isContentEditable;
+    }
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space") {
+        if (isTypingTarget(e.target)) return;
         nav.space = true;
-        if (!e.target.closest(".pnode-edit")) e.preventDefault();
+        e.preventDefault();
         wrap.classList.add("panning");
       }
       if (e.key === "Control") {

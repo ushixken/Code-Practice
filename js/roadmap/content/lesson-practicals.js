@@ -17,16 +17,16 @@ window.ROADMAP_PRACTICALS = {
   ],
   values: [
     {
-      title: "Print a user",
-      prompt: "Store Ada in a variable, then print the variable.",
-      code: 'const user = "Ada";\nconsole.log(user);',
+      title: "Update a score",
+      prompt: "Use let for a score that changes, then print the new value.",
+      code: "let score = 5;\nscore = score + 3;\nconsole.log(score);",
     },
   ],
   variables: [
     {
-      title: "Update a score",
-      prompt: "Use let for a score that changes, then print the new value.",
-      code: "let score = 5;\nscore = score + 3;\nconsole.log(score);",
+      title: "Print a user",
+      prompt: "Store a learner name in a constant, then print the variable.",
+      code: 'const learner = "Sam";\nconsole.log(learner);',
     },
   ],
   dataTypes: [

@@ -498,26 +498,68 @@ const ROADMAP = [
   {
     id: "values",
     level: "easy",
-    title: "Variables in Practice",
-    summary: "Use const to store a value, then print it with console.log()",
+    title: "Change a Value with let",
+    summary: "Use let when a value needs to update",
     content: `
-      <p>You just learned <code>let</code> and <code>const</code>. Now practice using <code>const</code> to store one value with one clear name.</p>
-      <div class="example"><b>const city = "Manila";<br>console.log(city);</b></div>
-      <p>Use <code>const</code> when the value will stay the same, and <code>let</code> when it needs to change. The word <code>city</code> is a name we chose; it helps us remember what the value means.</p>
+      <p>Use <code>let</code> when you expect a value to change. After creating it, you can give it a new value later.</p>
+      <div class="example"><b>let score = 0;<br>score = score + 10;<br>console.log(score);</b></div>
+      <p>Use <code>const</code> by default. Choose <code>let</code> only when your program needs to update the value.</p>
     `,
     fnName: "firstVariable",
     starter:
-      'function firstVariable() {\n  // Create user, set it to "Ada", then print user.\n\n}',
+      "function firstVariable() {\n  // Create score with let, set it to 0,\n  // add 10, then print score.\n\n}",
     solution:
-      'function firstVariable() {\n  const user = "Ada";\n  console.log(user);\n}',
-    task: 'Create a variable named <code>user</code>, set it to <code>"Ada"</code>, then print it with <code>console.log(user)</code>.',
+      "function firstVariable() {\n  let score = 0;\n  score = score + 10;\n  console.log(score);\n}",
+    task: "Create <code>score</code> with <code>let</code> and set it to <code>0</code>. Add <code>10</code> to it, then print <code>score</code>.",
     hints: [
-      "Use const to create a value that will not change.",
-      'Put the text "Ada" inside double quotes.',
-      "Use console.log(user) after creating the variable.",
+      "Use let because score will change.",
+      "Use score = score + 10 to update the value.",
+      "Use console.log(score) after updating it.",
     ],
     reflection:
-      'Why is a name like user easier to understand than repeating "Ada" throughout the code?',
+      "When would you choose let instead of const?",
+    testMode: "custom",
+    validate: async (fn) => {
+      const output = []
+      const originalLog = console.log
+      console.log = (...values) => output.push(values.join(" "))
+      try {
+        fn()
+      } finally {
+        console.log = originalLog
+      }
+      const ok = output.includes("10")
+      return {
+        ok,
+        consoleOutput: output,
+        lines: [
+          `${ok ? "✓" : "✗"} Lesson check: update score and print 10 with console.log(score).`,
+        ],
+      }
+    },
+  },
+  {
+    id: "variables",
+    level: "easy",
+    title: "Store a Value with const",
+    summary: "Give one piece of text a clear name",
+    content: `
+      <p>A <b>variable</b> is a name for a value. Start with <code>const</code> when you want the value to stay the same.</p>
+      <div class="example"><b>const language = "JavaScript";<br>console.log(language);</b></div>
+      <p>The name <code>language</code> helps a reader understand what the text means. You will learn <code>let</code> when you need a value to change.</p>
+    `,
+    fnName: "declareAge",
+    starter:
+      "function declareAge() {\n  // Create a variable named user using const,\n  // set it to \"Ada\", then print it.\n\n}",
+    solution:
+      "function declareAge() {\n  const user = \"Ada\";\n  console.log(user);\n}",
+    task: "Declare a variable called <code>user</code> with <code>const</code>, set it to <code>\"Ada\"</code>, then print it with <code>console.log(user)</code>.",
+    hints: [
+      "Start with const because this text will not change in this exercise.",
+      'Create it with: const user = "Ada";',
+      "On the next line, use console.log(user) to print its value.",
+    ],
+    reflection: "What does the name user help you remember about the text \"Ada\"?",
     testMode: "custom",
     validate: async (fn) => {
       const output = []
@@ -533,51 +575,7 @@ const ROADMAP = [
         ok,
         consoleOutput: output,
         lines: [
-          `${ok ? "✓" : "✗"} Lesson check: print the value stored in user${ok ? "." : " using console.log(user)."}`,
-        ],
-      }
-    },
-  },
-  {
-    id: "variables",
-    level: "easy",
-    title: "Variables (var, let, const)",
-    summary: "Storing data with let, const, and var",
-    content: `
-      <p><b>Variables</b> are named containers for values. Modern JS mostly uses two keywords:</p>
-      <p><code>let</code> — a variable that can be reassigned later.<br><code>const</code> — a variable that cannot be reassigned after it's set.</p>
-      <p>You'll also see <code>var</code> in older code, but <code>let</code>/<code>const</code> fixed some of its quirks (like leaking outside blocks), so prefer them.</p>
-      <div class="example"><b>let score = 0;</b> score = score + 10; // OK, score is now 10</div>
-      <div class="example"><b>const name = "Ada";<br>name = "Bob"; // ❌ TypeError</b></div>
-    `,
-    fnName: "declareAge",
-    starter:
-      "function declareAge() {\n  // Create a variable named age using let,\n  // set it to 25, then print it.\n\n}",
-    solution:
-      "function declareAge() {\n  let age = 25;\n  console.log(age);\n}",
-    task: "Declare a variable called <code>age</code> with <code>let</code>, assign it <code>25</code>, then print it with <code>console.log(age)</code>.",
-    hints: [
-      "Use let because this lesson is practicing a variable that can change later.",
-      "Create it with: let age = 25;",
-      "On the next line, use console.log(age); to print its value.",
-    ],
-    reflection: "What does the name age help you remember about the value 25?",
-    testMode: "custom",
-    validate: async (fn) => {
-      const output = []
-      const originalLog = console.log
-      console.log = (...values) => output.push(values.join(" "))
-      try {
-        fn()
-      } finally {
-        console.log = originalLog
-      }
-      const ok = output.includes("25")
-      return {
-        ok,
-        consoleOutput: output,
-        lines: [
-          `${ok ? "✓" : "✗"} Lesson check: print the value 25 with console.log(age).`,
+          `${ok ? "✓" : "✗"} Lesson check: print the value stored in user with console.log(user).`,
         ],
       }
     },
@@ -585,12 +583,12 @@ const ROADMAP = [
   {
     id: "dataTypes",
     level: "easy",
-    title: "Data Types",
-    summary: "string, number, boolean, array, object, and typeof",
+    title: "Values and Types",
+    summary: "Text, numbers, true/false, and typeof",
     content: `
-      <p>JavaScript has a handful of core types: <b>string</b> ("hi"), <b>number</b> (42), <b>boolean</b> (true/false), <b>array</b> ([1,2,3]), <b>object</b> ({}), and <b>undefined/null</b> for "nothing here".</p>
+      <p>For now, learn three common kinds of value: <b>string</b> for text (<code>"hi"</code>), <b>number</b> for quantities (<code>42</code>), and <b>boolean</b> for true/false answers.</p>
       <p>The <code>typeof</code> operator tells you what type a value is at runtime: <code>typeof 5</code> is <code>"number"</code>, <code>typeof "hi"</code> is <code>"string"</code>.</p>
-      <p>Arrays are actually a special kind of object, so <code>typeof [1,2]</code> is <code>'object'</code> too — that's a classic gotcha.</p>
+      <p>You will meet more complex values, such as arrays and objects, later in the roadmap.</p>
     `,
     fnName: "describeType",
     starter:
@@ -622,12 +620,11 @@ const ROADMAP = [
     id: "operators",
     level: "easy",
     title: "Operators",
-    summary: "Arithmetic, comparison, and logical operators",
+    summary: "Use math operators to calculate values",
     content: `
-      <p><b>Arithmetic:</b> <code>+ - * / %</code>. <b>Comparison:</b> always prefer <code>===</code> / <code>!==</code> over <code>==</code>/<code>!=</code>, since the loose versions silently convert types.</p>
-      <p><b>Logical:</b> <code>&&</code> (and), <code>||</code> (or), <code>!</code> (not) combine boolean expressions.</p>
-      <div class="example"><b>5 == "5"</b> → true (loose, converts types)</div>
-      <div class="example"><b>5 === "5"</b> → false (strict, no conversion)</div>
+      <p>Operators let JavaScript do math. Start with <code>+</code> to add, <code>-</code> to subtract, <code>*</code> to multiply, and <code>/</code> to divide.</p>
+      <div class="example"><b>const total = 8 + 4;<br>console.log(total); // 12</b></div>
+      <p>You will learn comparisons such as <code>===</code> and <code>>=</code> in the next step, when they help programs make decisions.</p>
     `,
     fnName: "isAdult",
     starter:
@@ -660,7 +657,8 @@ const ROADMAP = [
     title: "Conditionals (if / else)",
     summary: "Branching logic with if, else if, and else",
     content: `
-      <p><code>if</code>/<code>else</code> lets your code take different paths depending on a condition. Chain <code>else if</code> for multiple branches, and always check the most specific condition first.</p>
+      <p>A comparison asks a true/false question. Use <code>===</code> to check whether two values are the same, and <code>>=</code> to check whether one number is at least another.</p>
+      <p><code>if</code>/<code>else</code> uses that true/false answer to choose a path. Chain <code>else if</code> for multiple choices.</p>
       <div class="example"><b>if (x > 10) { ... } else if (x > 5) { ... } else { ... }</b></div>
     `,
     fnName: "trafficAction",

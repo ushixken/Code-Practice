@@ -516,6 +516,7 @@ const ROADMAP = [
       <p>Use <code>let</code> when you expect a value to change. After creating it, you can give it a new value later.</p>
       <div class="example"><b>let score = 0;<br>score = score + 10;<br>console.log(score);</b></div>
       <p>Use <code>const</code> by default. Choose <code>let</code> only when your program needs to update the value.</p>
+      <div class="roadmap-quote-guide"><span>WATCH OUT</span><p><code>const</code> prevents assigning a new value to the name. It does not freeze an array or object: <code>const items = []</code> can still use <code>items.push("pen")</code>.</p></div>
     `,
     fnName: "firstVariable",
     starter:
@@ -569,6 +570,7 @@ const ROADMAP = [
       <p>A <b>variable</b> is a name for a value. Start with <code>const</code> when you want the value to stay the same.</p>
       <div class="example"><b>const language = "JavaScript";<br>console.log(language);</b></div>
       <p>The name <code>language</code> helps a reader understand what the text means. You will learn <code>let</code> when you need a value to change.</p>
+      <div class="roadmap-quote-guide"><span>WATCH OUT</span><p><code>const</code> means the variable name cannot be reassigned. If the value needs to change later, choose <code>let</code> instead.</p></div>
     `,
     fnName: "declareAge",
     starter:
@@ -942,6 +944,7 @@ const ROADMAP = [
     starter:
       'function getFullName(person) {\n  // person is { first, last }.\n  // Return "First Last".\n\n}',
     task: "Given <code>person = { first, last }</code>, return <code>'First Last'</code> as one string.",
+    hints: ["The person object already has two labeled values.", "Read each value with dot notation.", "Return person.first + \" \" + person.last."],
     testMode: "io",
     tests: [
       [[{ first: "Ada", last: "Lovelace" }], "Ada Lovelace"],
@@ -966,6 +969,7 @@ const ROADMAP = [
     solution:
       'function makeGreeting() {\n  const message = "Welcome!";\n  return message;\n}',
     task: 'Create <code>const message = "Welcome!"</code> inside the function, then return <code>message</code>.',
+    hints: ["The message belongs inside the function body.", "Create it before returning it.", "Use const message = \"Welcome!\"; then return message."],
     testMode: "io",
     tests: [[[], "Welcome!"]],
   },
@@ -982,6 +986,7 @@ const ROADMAP = [
     starter:
       "function multiplyBy(factor) {\n  // Return a function that takes x\n  // and returns x * factor.\n\n}",
     task: "Return a new function that multiplies its argument by <code>factor</code>.",
+    reflection: "What value does the returned function remember after multiplyBy has finished?",
     testMode: "custom",
     validate: async (fn) => {
       const lines = []
@@ -1009,6 +1014,7 @@ const ROADMAP = [
       <div class="example"><b>const numbers = [1, 2, 3];<br>const squares = numbers.map(number =&gt; number * number);<br>console.log(squares);</b><br>→ [1, 4, 9]</div>
       <div class="example"><b>const scores = [4, 10, 15];<br>const passing = scores.filter(score =&gt; score >= 10);<br>console.log(passing);</b><br>→ [10, 15]</div>
       <p>This workspace practices <code>map()</code> and <code>reduce()</code>. <code>find()</code> returns the first matching item; <code>some()</code> asks whether at least one item matches; <code>every()</code> asks whether all match. <code>sort()</code> rearranges a list—copy first if you need to keep the original order.</p>
+      <div class="roadmap-quote-guide"><span>WATCH OUT</span><p>When a callback uses braces, it needs its own <code>return</code>. Without it, <code>map</code>, <code>filter</code>, or <code>reduce</code> receives <code>undefined</code>.</p></div>
     `,
     fnName: "summarizeNumbers",
     starter:
@@ -1037,6 +1043,7 @@ const ROADMAP = [
     starter:
       "function combine(arr1, arr2) {\n  // Return one array containing all\n  // elements of arr1 followed by arr2,\n  // using the spread operator.\n\n}",
     task: "Return a single array made of <code>arr1</code>'s items followed by <code>arr2</code>'s items, using <code>...</code> spread.",
+    hints: ["Think of spread as opening each array into its individual items.", "Put both arrays inside new square brackets.", "Return [...arr1, ...arr2]."],
     testMode: "io",
     tests: [
       [
@@ -1058,11 +1065,13 @@ const ROADMAP = [
     content: `
       <p>A <b>Promise</b> represents a value that isn't ready yet — like data from a network request. <code>async</code> functions let you write <code>await somePromise</code> to pause until it resolves, instead of chaining <code>.then()</code>.</p>
       <div class="example"><b>async function run() {<br>&nbsp;&nbsp;const value = await fetchData();<br>&nbsp;&nbsp;console.log(value);<br>}</b></div>
+      <div class="roadmap-quote-guide"><span>WATCH OUT</span><p>Without <code>await</code>, you have a Promise object—not its finished value. Await it before you read or return the result.</p></div>
     `,
     fnName: "delayedDouble",
     starter:
       "function delayedDouble(n) {\n  // Return a Promise that resolves\n  // with n * 2 after a short delay.\n  // Hint: new Promise(resolve => setTimeout(() => resolve(n*2), 50))\n\n}",
     task: "Return a <code>Promise</code> that resolves with <code>n * 2</code> after a short delay.",
+    reflection: "Why is a Promise useful when a value is not ready immediately?",
     testMode: "custom",
     validate: async (fn) => {
       const lines = []
@@ -1093,6 +1102,7 @@ const ROADMAP = [
       'function hasAtSign(text) {\n  // Return whether text includes "@".\n\n}',
     solution: 'function hasAtSign(text) {\n  return text.includes("@");\n}',
     task: 'Return whether <code>text</code> includes <code>"@"</code> using <code>includes()</code>.',
+    hints: ["Strings have built-in methods for common checks.", "Call includes on text, then give it the character to find.", "Return text.includes(\"@\")."],
     testMode: "io",
     tests: [
       [["ada@example.com"], true],
@@ -1281,6 +1291,7 @@ const ROADMAP = [
     starter:
       'function readUserName(data) {\n  // data can be { user: { name: "Ada" } }.\n  // Return the name, or undefined when it is missing.\n\n}',
     task: "Extract a user name from API-like JSON data using safe object access. Return undefined when the name is missing.",
+    hints: ["Read the data shape from the inside out: name belongs to user.", "A missing user should not crash the function.", "Use optional chaining: return data?.user?.name;"],
     testMode: "io",
     tests: [
       [[{ user: { name: "Ada" } }], "Ada"],
@@ -1336,6 +1347,7 @@ const ROADMAP = [
     summary: "Turn your knowledge into complete applications",
     content: `
       <p>Graduate from the Foundation Track by building projects without copying a tutorial line by line. Plan the inputs, state, user actions, and edge cases before you code.</p>
+      <p><b>Plan in this order:</b> 1. List each button or interaction and its result. 2. List the data the app must remember. 3. Build the ugliest working version first. 4. Test one action at a time, then improve the design.</p>
       <div class="example"><b>Beginner: calculator → todo app → quiz app → form validator<br>Intermediate: weather app → movie app → expense tracker → notes app<br>Advanced foundation: e-commerce frontend → dashboard → social media UI</b></div>
       <p>For every project, write a short plan, build the smallest working version, test it, then improve it. That loop is how programming skill becomes durable.</p>
     `,
@@ -1370,6 +1382,7 @@ const ROADMAP = [
     starter:
       "function safeDivide(a, b) {\n  // Return a / b. If b is 0, return 'Cannot divide by zero'.\n\n}",
     task: "Practice a predictable failure path: never let an invalid operation silently produce a confusing result.",
+    reflection: "When should your program return a fallback instead of continuing with an invalid value?",
     testMode: "io",
     tests: [
       [[8, 2], 4],
@@ -1392,6 +1405,7 @@ const ROADMAP = [
     starter:
       "function getUserName(name) {\n  // Create a User class with a constructor and greet method.\n  // Return a new User instance.\n\n}",
     task: "Create a class with a constructor that stores a name and a method that returns a greeting. Return an instance of that class.",
+    reflection: "How does this.name let the same greet method work for different instances?",
     sourceRequirements: [{ test: (code) => /\bclass\s+\w+/.test(code) && /\bconstructor\s*\(/.test(code) && /\bgreet\s*\(/.test(code), message: "Define a class with a constructor and greet method." }],
     testMode: "custom",
     validate: async (fn) => {
@@ -1416,6 +1430,7 @@ const ROADMAP = [
       <p>Professional JavaScript means writing code that other people can understand, test, and safely change. Use clear names, small functions, version control, tests, and browser or Node debugging tools.</p>
       <div class="example"><b>function add(a, b) {<br>&nbsp;&nbsp;return a + b;<br>}<br><br>console.assert(add(2, 3) === 5, "add should total 5");</b></div>
       <p>This workspace uses <code>console.assert()</code> as a lightweight real check: it reports when an expectation is false. Debugging tools from the earlier lesson help you inspect a failure before changing code.</p>
+      <p><b>Use the same professional loop:</b> name the behavior, write a small check, make it pass, then keep the change focused enough to review.</p>
       <p>Next, build projects in order: calculator → quiz or todo app → weather app → API-backed app → full-stack app. Learn Node.js, npm, modules, HTTP APIs, and a framework <em>after</em> the language foundations feel natural.</p>
     `,
     fnName: "formatName",
@@ -1478,7 +1493,11 @@ const CONCEPT_BRIDGES = {
 function conceptBridgeMarkup(lesson) {
   const bridge = CONCEPT_BRIDGES[lesson.id]
   if (!bridge) return ""
-  return `<section class="roadmap-concept-bridge"><span>READ THIS FIRST</span><p>${bridge[0]}</p><p><b>How to read the code:</b> ${bridge[1]}</p></section>`
+  const nextLesson = ROADMAP[ROADMAP.indexOf(lesson) + 1]
+  const nextStep = nextLesson
+    ? `<p><b>Up next:</b> You will use this foundation in <code>${nextLesson.title}</code>.</p>`
+    : ""
+  return `<section class="roadmap-concept-bridge"><span>READ THIS FIRST</span><p>${bridge[0]}</p><p><b>How to read the code:</b> ${bridge[1]}</p>${nextStep}</section>`
 }
 
 let roadmapSolved = new Set()

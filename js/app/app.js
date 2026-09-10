@@ -1615,6 +1615,17 @@ function loadRoadmapLesson(idx) {
       end = roadmapCodeInputEl.selectionEnd
     const hasSelection = start !== end
 
+    if ((e.ctrlKey || e.metaKey) && e.key === "/") {
+      e.preventDefault()
+      const changed = toggleLineComment(val, start, end)
+      roadmapCodeInputEl.value = changed.value
+      roadmapCodeInputEl.selectionStart = changed.selectionStart
+      roadmapCodeInputEl.selectionEnd = changed.selectionEnd
+      updateRoadmapGutter()
+      refreshRoadmapHighlight()
+      return
+    }
+
     // Tab: indent
     if (e.key === "Tab") {
       e.preventDefault()
@@ -2531,6 +2542,17 @@ codeInput.addEventListener("keydown", (e) => {
   const start = codeInput.selectionStart,
     end = codeInput.selectionEnd
   const hasSelection = start !== end
+
+  if ((e.ctrlKey || e.metaKey) && e.key === "/") {
+    e.preventDefault()
+    const changed = toggleLineComment(val, start, end)
+    codeInput.value = changed.value
+    codeInput.selectionStart = changed.selectionStart
+    codeInput.selectionEnd = changed.selectionEnd
+    updateGutter()
+    refreshHighlight()
+    return
+  }
 
   // Tab: indent (or indent selection block)
   if (e.key === "Tab") {

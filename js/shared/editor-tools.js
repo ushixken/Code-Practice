@@ -112,3 +112,25 @@ function getIndent(line) {
   const match = line.match(/^[ \t]*/)
   return match ? match[0] : ""
 }
+
+function toggleLineComment(code, selectionStart, selectionEnd) {
+  const lineStart = code.lastIndexOf("\n", selectionStart - 1) + 1
+  let lineEnd = code.indexOf("\n", selectionEnd)
+  if (lineEnd === -1) lineEnd = code.length
+  const block = code.slice(lineStart, lineEnd)
+  const lines = block.split("\n")
+  const nonEmpty = lines.filter((line) => line.trim())
+  const shouldUncomment = nonEmpty.length > 0 && nonEmpty.every((line) => /^\s*\/\//.test(line))
+  const changed = lines
+    .map((line) => {
+      if (!line.trim()) return line
+      if (shouldUncomment) return line.replace(/^(\s*)\/\/ ?/, "$1")
+      return line.replace(/^(\s*)/, "$1// ")
+    })
+    .join("\n")
+  return {
+    value: code.slice(0, lineStart) + changed + code.slice(lineEnd),
+    selectionStart: lineStart,
+    selectionEnd: lineStart + changed.length,
+  }
+}

@@ -427,6 +427,12 @@ const ROADMAP = [
     solution:
       'function firstProgram() {\n  console.log("Hello, JavaScript!");\n}',
     task: 'Use <code>console.log()</code> to print <code>"Hello, JavaScript!"</code>. This is how you inspect values while learning and debugging.',
+    sourceRequirements: [
+      {
+        test: (code) => /console\.log\s*\(\s*["']Hello, JavaScript!["']\s*\)/.test(code),
+        message: "Use the exact console.log statement named in the goal.",
+      },
+    ],
     hints: [
       "Use the browser’s debugging tool: console.log(...).",
       "The text you want to print is a string, so put it inside double quotes.",
@@ -468,6 +474,12 @@ const ROADMAP = [
     solution:
       'function consolePractice() {\n  console.log("I can use the console!");\n}',
     task: 'Type a <code>console.log()</code> statement that prints <code>"I can use the console!"</code>.',
+    sourceRequirements: [
+      {
+        test: (code) => /console\.log\s*\(\s*["']I can use the console!["']\s*\)/.test(code),
+        message: "Use the exact console.log statement named in the goal.",
+      },
+    ],
     hints: [
       "The command starts with console.log.",
       "Put the message inside parentheses and double quotes.",
@@ -511,6 +523,16 @@ const ROADMAP = [
     solution:
       "function firstVariable() {\n  let score = 0;\n  score = score + 10;\n  console.log(score);\n}",
     task: "Create <code>score</code> with <code>let</code> and set it to <code>0</code>. Add <code>10</code> to it, then print <code>score</code>.",
+    sourceRequirements: [
+      {
+        test: (code) => /\blet\s+score\s*=\s*0\b/.test(code),
+        message: "Create the exact variable named in the goal with its requested starting value.",
+      },
+      {
+        test: (code) => /\bscore\s*=\s*score\s*\+\s*10\b/.test(code),
+        message: "Update the requested variable with the amount named in the goal.",
+      },
+    ],
     hints: [
       "Use let because score will change.",
       "Use score = score + 10 to update the value.",
@@ -554,6 +576,16 @@ const ROADMAP = [
     solution:
       "function declareAge() {\n  const user = \"Ada\";\n  console.log(user);\n}",
     task: "Declare a variable called <code>user</code> with <code>const</code>, set it to <code>\"Ada\"</code>, then print it with <code>console.log(user)</code>.",
+    sourceRequirements: [
+      {
+        test: (code) => /\bconst\s+user\s*=\s*["']Ada["']/.test(code),
+        message: "Use the requested constant name and value from the goal.",
+      },
+      {
+        test: (code) => /console\.log\s*\(\s*user\s*\)/.test(code),
+        message: "Print the exact variable named in the goal.",
+      },
+    ],
     hints: [
       "Start with const because this text will not change in this exercise.",
       'Create it with: const user = "Ada";',
@@ -596,6 +628,16 @@ const ROADMAP = [
     solution:
       "function describeType() {\n  const answer = 42;\n  console.log(typeof answer);\n}",
     task: "Create <code>const answer = 42</code>, then use <code>console.log(typeof answer)</code> to print its type.",
+    sourceRequirements: [
+      {
+        test: (code) => /\bconst\s+answer\s*=\s*42\b/.test(code),
+        message: "Create the exact constant named in the goal.",
+      },
+      {
+        test: (code) => /console\.log\s*\(\s*typeof\s+answer\s*\)/.test(code),
+        message: "Inspect the exact variable named in the goal.",
+      },
+    ],
     testMode: "custom",
     validate: async (fn) => {
       const output = []
@@ -631,6 +673,12 @@ const ROADMAP = [
       "function isAdult() {\n  // Compare 21 with 18, then print the result.\n\n}",
     solution: "function isAdult() {\n  console.log(21 >= 18);\n}",
     task: "Use <code>console.log(21 >= 18)</code> to print the result of a comparison.",
+    sourceRequirements: [
+      {
+        test: (code) => /console\.log\s*\(\s*21\s*>=\s*18\s*\)/.test(code),
+        message: "Use the exact comparison named in the goal.",
+      },
+    ],
     testMode: "custom",
     validate: async (fn) => {
       const output = []
@@ -667,6 +715,16 @@ const ROADMAP = [
     solution:
       'function trafficAction() {\n  const light = "green";\n  if (light === "green") {\n    console.log("go");\n  }\n}',
     task: 'Create <code>const light = "green"</code>. Use an <code>if</code> statement to print <code>"go"</code> when the light is green.',
+    sourceRequirements: [
+      {
+        test: (code) => /\bconst\s+light\s*=\s*["']green["']/.test(code),
+        message: "Create the exact constant named in the goal.",
+      },
+      {
+        test: (code) => /\bif\s*\(\s*light\s*===\s*["']green["']\s*\)/.test(code),
+        message: "Check the exact variable and value named in the goal.",
+      },
+    ],
     testMode: "custom",
     validate: async (fn) => {
       const output = []
@@ -1783,6 +1841,29 @@ async function runRoadmapCode() {
     printRoadmapLine(
       "✗ This lesson requires an arrow function. Use => instead of function.",
       "term-fail",
+    )
+    return
+  }
+
+  // A goal that names a variable, value, or expression exactly should be
+  // practiced exactly. Lessons without sourceRequirements intentionally leave
+  // naming choices open for the learner.
+  const failedSourceRequirements = (lesson.sourceRequirements || [])
+    .filter((requirement) => {
+      try {
+        return !requirement.test(code)
+      } catch (error) {
+        return true
+      }
+    })
+    .map((requirement) => requirement.message)
+  if (failedSourceRequirements.length) {
+    printRoadmapLine(
+      "✗ Your output may be right, but the goal's exact instruction is not yet followed.",
+      "term-fail",
+    )
+    failedSourceRequirements.forEach((message) =>
+      printRoadmapLine("  • " + message, "term-fail"),
     )
     return
   }

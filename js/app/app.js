@@ -1789,7 +1789,11 @@ function startRoadmapPractical(lessonId, index = 0) {
   const practical = practicals[nextIndex]
   activeRoadmapPractical = { lessonId, index: nextIndex, practical, passed: false }
   const practiceSection = roadmapDetailEl.querySelector(".roadmap-practice")
-  if (practiceSection) practiceSection.hidden = true
+  if (practiceSection) {
+    practiceSection.hidden = false
+    practiceSection.classList.add("is-minimized")
+    practiceSection.setAttribute("aria-disabled", "true")
+  }
   const practicalLibrary = roadmapDetailEl.querySelector(".roadmap-practical-library")
   if (practicalLibrary) practicalLibrary.classList.add("is-practicing")
   roadmapDetailEl.querySelectorAll("[data-practical-card]").forEach((card) => {

@@ -3038,3 +3038,15 @@ mainEl.classList.add("view-roadmap")
 roadmapBtn.classList.add("active")
 problemsBtn.classList.remove("active")
 loadRoadmapLesson(0)
+
+function openTopicStepperPilot() {
+  if (location.hash !== "#test-stepper") return
+  document.getElementById("app").innerHTML = '<div id="topicRoot"></div>'
+  renderTopicStepper(document.getElementById("topicRoot"), window.TOPIC_VARIABLES)
+}
+
+document.getElementById("test-stepper")?.addEventListener("click", () => {
+  location.hash = "#test-stepper"
+})
+window.addEventListener("hashchange", openTopicStepperPilot)
+openTopicStepperPilot()

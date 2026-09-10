@@ -1467,6 +1467,11 @@ function loadRoadmapLesson(idx) {
     </div>
   `
 
+  // The workspace itself scrolls. Start every new lesson at its top so the
+  // concept-first gate is always visible instead of being left above view.
+  const roadmapWorkspaceEl = roadmapDetailEl.querySelector(".roadmap-workspace")
+  if (roadmapWorkspaceEl) roadmapWorkspaceEl.scrollTop = 0
+
   // Lesson examples are real code, not plain instructions. Highlight them so
   // keywords, strings, values, and comments are easy to distinguish at a glance.
   roadmapDetailEl.querySelectorAll(".example b").forEach((exampleCode) => {
@@ -2208,6 +2213,19 @@ document.addEventListener("keydown", (event) => {
   if (!mainEl.classList.contains("view-roadmap")) return
   const editor = document.getElementById("roadmapCodeInput")
   const isEditor = event.target === editor
+
+  // Before a workspace is opened, Ctrl+Enter is the keyboard equivalent of
+  // the visible “Try it” button.
+  if (
+    (event.ctrlKey || event.metaKey) &&
+    event.key === "Enter" &&
+    event.target.tagName !== "TEXTAREA" &&
+    roadmapDetailEl.querySelector(".roadmap-workspace.is-concept-first")
+  ) {
+    event.preventDefault()
+    document.getElementById("roadmapWorkspaceStart")?.click()
+    return
+  }
 
   if (event.key === "Tab" && !isEditor) {
     event.preventDefault()

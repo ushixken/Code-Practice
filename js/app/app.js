@@ -1502,6 +1502,11 @@ function conceptBridgeMarkup(lesson) {
   return `<section class="roadmap-concept-bridge"><span>READ THIS FIRST</span><p>${bridge[0]}</p><p><b>How to read the code:</b> ${bridge[1]}</p>${nextStep}</section>`
 }
 
+function courseClosingNoteMarkup(lesson) {
+  if (lesson !== ROADMAP[ROADMAP.length - 1]) return ""
+  return `<section class="roadmap-course-close"><span>WHAT'S NEXT</span><p>You now know the core JavaScript foundations: values, functions, decisions, data, browser interaction, and how to recover from common failures.</p><p>When you are ready, a natural next step is a framework such as React, then basic TypeScript for safer larger codebases, followed by npm and a bundler such as Vite. Build a few small projects as you learn each one—the course is complete, and this is where real practice begins.</p></section>`
+}
+
 let roadmapSolved = new Set()
 let roadmapPracticalSolved = new Set()
 let roadmapMainPracticalSolved = new Set()
@@ -1742,6 +1747,7 @@ function loadRoadmapLesson(idx) {
           <div class="roadmap-explanation-label">CONCEPT</div>
           ${lesson.content}
           ${conceptBridgeMarkup(lesson)}
+          ${courseClosingNoteMarkup(lesson)}
         </div>
       </aside>
     </div>

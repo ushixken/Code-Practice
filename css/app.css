@@ -1237,6 +1237,16 @@ body {
   letter-spacing: 0.06em;
 }
 .roadmap-concept-bridge p { margin: 6px 0; color: var(--text-1); font-size: 12.5px; line-height: 1.55; }
+.roadmap-course-close {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid rgba(139, 196, 114, 0.4);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: rgba(139, 196, 114, 0.055);
+}
+.roadmap-course-close > span { color: var(--accent); font: 10px var(--mono); font-weight: 700; letter-spacing: 0.06em; }
+.roadmap-course-close p { margin: 7px 0 0; font-size: 12.5px; line-height: 1.55; }
 .roadmap-quote-guide {
   margin: 13px 0;
   padding: 11px 12px;

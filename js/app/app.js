@@ -1492,14 +1492,20 @@ function loadRoadmapLesson(idx) {
       return
     }
 
-    // Auto-close bracket/quote pairs
-    if (
-      !hasSelection &&
-      PAIRS[e.key] &&
-      !e.metaKey &&
-      !e.ctrlKey &&
-      !e.altKey
-    ) {
+    // Opening brackets and quotes wrap a selection, or create an empty pair.
+    if (PAIRS[e.key] && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const close = PAIRS[e.key]
+      if (hasSelection) {
+        e.preventDefault()
+        roadmapCodeInputEl.value =
+          val.slice(0, start) + e.key + val.slice(start, end) + close + val.slice(end)
+        // Keep the original text selected inside its new wrapper.
+        roadmapCodeInputEl.selectionStart = start + 1
+        roadmapCodeInputEl.selectionEnd = end + 1
+        updateRoadmapGutter()
+        refreshRoadmapHighlight()
+        return
+      }
       const nextChar = val[end]
       const isQuote = e.key === "'" || e.key === '"' || e.key === "`"
       if (isQuote && nextChar === e.key) {
@@ -1513,7 +1519,6 @@ function loadRoadmapLesson(idx) {
         return
       }
       e.preventDefault()
-      const close = PAIRS[e.key]
       roadmapCodeInputEl.value =
         val.slice(0, start) + e.key + close + val.slice(end)
       roadmapCodeInputEl.selectionStart = roadmapCodeInputEl.selectionEnd =
@@ -1529,22 +1534,6 @@ function loadRoadmapLesson(idx) {
       roadmapCodeInputEl.selectionStart = roadmapCodeInputEl.selectionEnd =
         end + 1
       return
-    }
-
-    // Backspace on an empty pair removes both characters together
-    if (e.key === "Backspace" && !hasSelection && start > 0) {
-      const prevChar = val[start - 1]
-      const nextChar = val[start]
-      if (PAIRS[prevChar] === nextChar) {
-        e.preventDefault()
-        roadmapCodeInputEl.value =
-          val.slice(0, start - 1) + val.slice(start + 1)
-        roadmapCodeInputEl.selectionStart = roadmapCodeInputEl.selectionEnd =
-          start - 1
-        updateRoadmapGutter()
-        refreshRoadmapHighlight()
-        return
-      }
     }
 
     // Enter: auto-indent to match current line, add one level after an opening bracket
@@ -2250,8 +2239,20 @@ codeInput.addEventListener("keydown", (e) => {
     return
   }
 
-  // Auto-close bracket/quote pairs
-  if (!hasSelection && PAIRS[e.key] && !e.metaKey && !e.ctrlKey && !e.altKey) {
+  // Opening brackets and quotes wrap a selection, or create an empty pair.
+  if (PAIRS[e.key] && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    const close = PAIRS[e.key]
+    if (hasSelection) {
+      e.preventDefault()
+      codeInput.value =
+        val.slice(0, start) + e.key + val.slice(start, end) + close + val.slice(end)
+      // Keep the original text selected inside its new wrapper.
+      codeInput.selectionStart = start + 1
+      codeInput.selectionEnd = end + 1
+      updateGutter()
+      refreshHighlight()
+      return
+    }
     // For quotes: if the char right after cursor is the same quote, just move past it
     // (typing a closing quote yourself) instead of inserting a new pair.
     const nextChar = val[end]
@@ -2268,7 +2269,6 @@ codeInput.addEventListener("keydown", (e) => {
       return
     }
     e.preventDefault()
-    const close = PAIRS[e.key]
     codeInput.value = val.slice(0, start) + e.key + close + val.slice(end)
     codeInput.selectionStart = codeInput.selectionEnd = start + 1
     updateGutter()
@@ -2281,20 +2281,6 @@ codeInput.addEventListener("keydown", (e) => {
     e.preventDefault()
     codeInput.selectionStart = codeInput.selectionEnd = end + 1
     return
-  }
-
-  // Backspace on an empty pair (e.g. "(|)") removes both characters together
-  if (e.key === "Backspace" && !hasSelection && start > 0) {
-    const prevChar = val[start - 1]
-    const nextChar = val[start]
-    if (PAIRS[prevChar] === nextChar) {
-      e.preventDefault()
-      codeInput.value = val.slice(0, start - 1) + val.slice(start + 1)
-      codeInput.selectionStart = codeInput.selectionEnd = start - 1
-      updateGutter()
-      refreshHighlight()
-      return
-    }
   }
 
   // Enter: auto-indent to match current line, add one level after an opening bracket

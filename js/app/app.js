@@ -1450,7 +1450,6 @@ function loadRoadmapLesson(idx) {
       </section>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — practical examples are now unlocked below.</div>' : ""}
       ${isDone ? roadmapPracticalsMarkup(lesson.id) : ""}
-      ${isDone ? roadmapMainPracticalMarkup(lesson.id) : ""}
       ${
         roadmapFunctionWrapperHidden || lesson.standalone
           ? ""
@@ -1491,6 +1490,7 @@ function loadRoadmapLesson(idx) {
           <div class="roadmap-explanation-label">CONCEPT</div>
           ${lesson.content}
           ${conceptBridgeMarkup(lesson)}
+          ${isDone ? roadmapMainPracticalMarkup(lesson.id) : ""}
         </div>
       </aside>
     </div>
@@ -1877,7 +1877,8 @@ function showRoadmapPracticals(lessonId) {
   }
   if (!bodyEl.querySelector(".roadmap-main-practical")) {
     const mainMarkup = roadmapMainPracticalMarkup(lessonId)
-    if (mainMarkup) editorWrap.insertAdjacentHTML("beforebegin", mainMarkup)
+    const explanation = roadmapDetailEl.querySelector(".roadmap-explanation-body")
+    if (mainMarkup && explanation) explanation.insertAdjacentHTML("beforeend", mainMarkup)
   }
   bindRoadmapPracticalActions()
 }

@@ -157,12 +157,12 @@ function renderTopicStepper(root, topic) {
           <div class="topic-step-snippet-code">${highlightedCode(s.code)}</div>
           <div class="topic-step-snippet-footer">
             <span class="topic-step-snippet-label">JavaScript</span>
-            <button class="topic-run-btn" type="button">Run Code</button>
+            ${s.requiresRun ? '<button class="topic-run-btn" type="button">Run Code</button>' : ""}
           </div>
-          <div class="topic-step-console" hidden>
+          ${s.requiresRun ? `<div class="topic-step-console" hidden>
             <div class="topic-step-console-label">Console</div>
             <div class="topic-step-console-output"></div>
-          </div>
+          </div>` : ""}
         `
         currentContent.appendChild(box)
 
@@ -173,7 +173,7 @@ function renderTopicStepper(root, topic) {
           currentContent.appendChild(hint)
         }
 
-        box.querySelector(".topic-run-btn").addEventListener("click", () => {
+        box.querySelector(".topic-run-btn")?.addEventListener("click", () => {
           const { output, error } = runSnippetCode(s.code)
           const consoleBox = box.querySelector(".topic-step-console")
           const outEl = box.querySelector(".topic-step-console-output")
@@ -215,7 +215,7 @@ function renderTopicStepper(root, topic) {
             <div class="topic-step-snippet-code">${highlightedCode(nextStep.code)}</div>
             <div class="topic-step-snippet-footer">
               <span class="topic-step-snippet-label">JavaScript</span>
-              <button class="topic-run-btn" type="button" tabindex="-1">Run Code</button>
+              ${nextStep.requiresRun ? '<button class="topic-run-btn" type="button" tabindex="-1">Run Code</button>' : ""}
             </div>
           </div>
           ${nextStep.requiresRun ? '<div class="topic-step-run-hint">Run code example to continue!</div>' : ""}
@@ -319,17 +319,28 @@ function renderTopicStepper(root, topic) {
         <div class="topic-stepper-body">
           <p class="topic-challenge-task">${challenge.task}</p>
           <div class="topic-challenge-editor">
-            <textarea class="topic-challenge-textarea" id="challengeCode" spellcheck="false">${escapeHtml(challenge.starter)}</textarea>
+            <div class="topic-challenge-editor-wrap">
+              <pre class="topic-challenge-gutter" id="challengeGutter">1</pre>
+              <div class="topic-challenge-code-area">
+                <pre class="topic-challenge-highlight" id="challengeHighlight" aria-hidden="true"></pre>
+                <textarea class="topic-challenge-textarea" id="challengeCode" spellcheck="false" aria-label="JavaScript challenge editor">${escapeHtml(challenge.starter)}</textarea>
+              </div>
+            </div>
             <div class="topic-challenge-editor-footer">
               <button class="topic-reset-link" id="challengeReset" type="button">reset</button>
-              <button class="topic-run-btn" id="challengeRun" type="button">Run Code</button>
             </div>
           </div>
-          <div class="topic-challenge-console" id="challengeConsole">Console output will appear here.</div>
-          <div id="challengeVerdict"></div>
+          <div class="topic-challenge-console">
+            <div class="topic-challenge-panel-label">Console output</div>
+            <div id="challengeConsole">Console output will appear here.</div>
+          </div>
+          <div class="topic-challenge-check">
+            <div class="topic-challenge-panel-label">Lesson check</div>
+            <div id="challengeVerdict">Run your code to check the result.</div>
+          </div>
           <div class="topic-challenge-nav">
             <span class="topic-challenge-progress">Challenge ${state.challengeIndex + 1} / ${topic.challenges.length}</span>
-            <button class="topic-continue-btn" id="challengeNext" disabled>Next Challenge</button>
+            <button class="topic-continue-btn" id="challengeNext">Run Code</button>
           </div>
         </div>
       </div>
@@ -339,15 +350,30 @@ function renderTopicStepper(root, topic) {
     const consoleEl = root.querySelector("#challengeConsole")
     const verdictEl = root.querySelector("#challengeVerdict")
     const nextBtn = root.querySelector("#challengeNext")
+    const highlightEl = root.querySelector("#challengeHighlight")
+    const gutterEl = root.querySelector("#challengeGutter")
+
+    function refreshChallengeEditor() {
+      let html = highlightCode(codeEl.value)
+      if (codeEl.value.endsWith("\n")) html += " "
+      highlightEl.innerHTML = html
+      const lines = codeEl.value.split("\n").length
+      gutterEl.textContent = Array.from({ length: lines }, (_, index) => index + 1).join("\n")
+      highlightEl.scrollTop = codeEl.scrollTop
+      highlightEl.scrollLeft = codeEl.scrollLeft
+      gutterEl.scrollTop = codeEl.scrollTop
+    }
 
     root.querySelector("#challengeReset").addEventListener("click", () => {
       codeEl.value = challenge.starter
       consoleEl.textContent = "Console output will appear here."
-      verdictEl.innerHTML = ""
-      nextBtn.disabled = true
+      verdictEl.textContent = "Run your code to check the result."
+      nextBtn.dataset.passed = "false"
+      nextBtn.textContent = "Run Code"
+      refreshChallengeEditor()
     })
 
-    root.querySelector("#challengeRun").addEventListener("click", () => {
+    function runChallenge() {
       const { output, error } = runSnippetCode(codeEl.value)
 
       if (error) {
@@ -356,7 +382,8 @@ function renderTopicStepper(root, topic) {
         // TypeError all read exactly as they would in a real browser console).
         consoleEl.innerHTML = `<span class="is-error">${error.name}: ${escapeHtml(error.message)}</span>`
         verdictEl.innerHTML = `<div class="topic-challenge-verdict is-fail">✗ Not quite — read the error above and try again.</div>`
-        nextBtn.disabled = true
+        nextBtn.dataset.passed = "false"
+        nextBtn.textContent = "Run Code"
         return
       }
 
@@ -367,15 +394,77 @@ function renderTopicStepper(root, topic) {
       const passed = challenge.check(output.join("\n"))
       if (passed) {
         verdictEl.innerHTML = `<div class="topic-challenge-verdict is-pass">✓ Correct!</div>`
-        nextBtn.disabled = false
+        nextBtn.dataset.passed = "true"
+        nextBtn.textContent = "Next Challenge"
       } else {
         verdictEl.innerHTML = `<div class="topic-challenge-verdict is-fail">✗ Not quite yet.</div>` +
           (challenge.hint ? `<div class="topic-challenge-hint">Hint: <code>${escapeHtml(challenge.hint)}</code></div>` : "")
-        nextBtn.disabled = true
+        nextBtn.dataset.passed = "false"
+        nextBtn.textContent = "Run Code"
+      }
+    }
+
+    codeEl.addEventListener("input", refreshChallengeEditor)
+    codeEl.addEventListener("scroll", refreshChallengeEditor)
+    codeEl.addEventListener("keydown", (event) => {
+      const value = codeEl.value
+      const start = codeEl.selectionStart
+      const end = codeEl.selectionEnd
+      const hasSelection = start !== end
+      const update = (nextValue, nextStart, nextEnd = nextStart) => {
+        codeEl.value = nextValue
+        codeEl.selectionStart = nextStart
+        codeEl.selectionEnd = nextEnd
+        refreshChallengeEditor()
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key === "/") {
+        event.preventDefault()
+        const changed = toggleLineComment(value, start, end)
+        update(changed.value, changed.selectionStart, changed.selectionEnd)
+        return
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault()
+        nextBtn.click()
+        return
+      }
+      if (event.key === "Tab") {
+        event.preventDefault()
+        update(value.slice(0, start) + "  " + value.slice(end), start + 2)
+        return
+      }
+      if (PAIRS[event.key] && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        const close = PAIRS[event.key]
+        const nextChar = value[end]
+        const isQuote = event.key === "'" || event.key === '"' || event.key === "`"
+        if (hasSelection) {
+          event.preventDefault()
+          update(value.slice(0, start) + event.key + value.slice(start, end) + close + value.slice(end), start + 1, end + 1)
+          return
+        }
+        if (isQuote && nextChar === event.key) {
+          event.preventDefault()
+          codeEl.selectionStart = codeEl.selectionEnd = start + 1
+          return
+        }
+        if (isQuote && /[A-Za-z0-9_]/.test(value[start - 1] || "")) return
+        event.preventDefault()
+        update(value.slice(0, start) + event.key + close + value.slice(end), start + 1)
+        return
+      }
+      if (!hasSelection && CLOSERS.has(event.key) && value[end] === event.key) {
+        event.preventDefault()
+        codeEl.selectionStart = codeEl.selectionEnd = end + 1
       }
     })
+    refreshChallengeEditor()
 
     nextBtn.addEventListener("click", () => {
+      if (nextBtn.dataset.passed !== "true") {
+        runChallenge()
+        return
+      }
       if (state.challengeIndex < topic.challenges.length - 1) {
         state.challengeIndex += 1
         renderChallenge()

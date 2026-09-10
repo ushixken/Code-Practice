@@ -1128,6 +1128,7 @@ const ROADMAP = [
       'function buttonMessage() {\n  // Find #saveButton and #message.\n  // When the button is clicked, set the message to "Saved!".\n\n}',
     task: 'Use <code>document.querySelector()</code> and <code>addEventListener()</code> to make the provided Save button change the provided message to <code>"Saved!"</code>.',
     sourceRequirements: [{ test: (code) => /document\.querySelector\s*\(/.test(code) && /\.addEventListener\s*\(\s*["']click["']/.test(code), message: "Select the elements and attach a click listener." }],
+    livePreview: { type: "button", html: '<button id="saveButton">Save</button><div id="message">Waiting for a click</div>' },
     testMode: "custom",
     validate: async (fn) => {
       const sandbox = document.createElement("div")
@@ -1154,6 +1155,7 @@ const ROADMAP = [
       'function isValidEmail(event, input, message) {\n  // Stop submission. If input.value is empty,\n  // show "Enter your name" in message.textContent.\n\n}',
     task: 'Validate a mock form submission: call <code>event.preventDefault()</code>, then show <code>"Enter your name"</code> when <code>input.value</code> is empty.',
     sourceRequirements: [{ test: (code) => /\.preventDefault\s*\(\s*\)/.test(code), message: "Stop the form submission with preventDefault()." }],
+    livePreview: { type: "form", html: '<form id="nameForm"><label>Name <input id="nameInput"></label><button>Submit</button></form><div id="message"></div>' },
     testMode: "custom",
     validate: async (fn) => {
       const event = { stopped: false, preventDefault() { this.stopped = true } }
@@ -1699,6 +1701,7 @@ function loadRoadmapLesson(idx) {
       </section>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — practical examples are now unlocked below.</div>' : ""}
       ${canPreview ? roadmapPracticalsMarkup(lesson.id) : ""}
+      ${lesson.livePreview ? '<section class="roadmap-live-preview"><div><span>LIVE PREVIEW</span><p>Interact with the page, then click an element to inspect it.</p></div><iframe id="roadmapLiveFrame" sandbox="allow-scripts allow-same-origin" title="Live lesson preview"></iframe><aside id="roadmapInspector">Click an element in the preview to inspect it.</aside></section>' : ""}
       ${
         roadmapFunctionWrapperHidden || lesson.standalone
           ? ""
@@ -1769,6 +1772,7 @@ function loadRoadmapLesson(idx) {
   })
 
   const roadmapCodeInputEl = document.getElementById("roadmapCodeInput")
+  if (lesson.livePreview) setupRoadmapLivePreview(lesson, starterForDisplay)
   document.getElementById("roadmapWorkspaceStart").addEventListener("click", () => {
     const workspace = roadmapDetailEl.querySelector(".roadmap-workspace")
     if (workspace) workspace.classList.remove("is-concept-first")
@@ -2138,6 +2142,40 @@ function showRoadmapPracticals(lessonId) {
   bindRoadmapPracticalActions()
 }
 
+function setupRoadmapLivePreview(lesson, code) {
+  const frame = document.getElementById("roadmapLiveFrame")
+  if (!frame) return
+  frame.srcdoc = `<!doctype html><html><body>${lesson.livePreview.html}</body></html>`
+  frame.addEventListener("load", () => {
+    const doc = frame.contentDocument
+    doc.addEventListener("click", (event) => {
+      const el = event.target
+      const inspector = document.getElementById("roadmapInspector")
+      if (!inspector) return
+      const attrs = [el.id && `#${el.id}`, el.className && `.${String(el.className).trim().replace(/\s+/g, ".")}`].filter(Boolean).join("")
+      inspector.innerHTML = `<b>&lt;${el.tagName.toLowerCase()}&gt;${attrs}</b><span>text: ${el.textContent.trim() || "(empty)"}</span>`
+    })
+    runRoadmapLivePreview(lesson, code)
+  }, { once: true })
+}
+
+function runRoadmapLivePreview(lesson, code) {
+  const frame = document.getElementById("roadmapLiveFrame")
+  const doc = frame?.contentDocument
+  if (!doc) return
+  try {
+    doc.body.innerHTML = lesson.livePreview.html
+    const fn = frame.contentWindow.Function(`${code}\nreturn ${lesson.fnName};`)()
+    if (lesson.livePreview.type === "button") fn()
+    if (lesson.livePreview.type === "form") {
+      const form = doc.querySelector("#nameForm"), input = doc.querySelector("#nameInput"), message = doc.querySelector("#message")
+      form?.addEventListener("submit", (event) => fn(event, input, message))
+    }
+  } catch (error) {
+    // The normal lesson terminal explains code errors; the preview stays usable.
+  }
+}
+
 function bindRoadmapPracticalActions() {
   roadmapDetailEl
     .querySelectorAll("[data-practical-start]")
@@ -2325,6 +2363,8 @@ async function runRoadmapCode() {
     printRoadmapLine("  " + err.message, "term-fail")
     return
   }
+
+  if (lesson.livePreview) runRoadmapLivePreview(lesson, code)
 
   if (lesson.testMode === "custom") {
     try {

@@ -42,9 +42,9 @@ window.ROADMAP_PRACTICALS = {
   values: [
     {
       title: "Update a score",
-      prompt: "Use let for a score that changes, then print the new value.",
-      code: "let score = 5;\nscore = score + 3;\nconsole.log(score);",
-      expectedOutput: ["8"],
+      prompt: "Start a score at 3 and print it. Then add 5 points and print the updated score.",
+      code: "let score = 3;\nconsole.log(score);\n\nscore = score + 5;\nconsole.log(score);",
+      expectedOutput: ["3", "8"],
       requirements: [
         {
           test: (code) => /\blet\s+\w+\s*=/.test(code),
@@ -59,6 +59,17 @@ window.ROADMAP_PRACTICALS = {
             return reassign.test(code)
           },
           message: "Reassign the same variable to update its value.",
+        },
+        {
+          test: (code) => {
+            const declared = code.match(/\blet\s+(\w+)\s*=\s*3\b/)
+            if (!declared) return false
+            const name = declared[1]
+            const firstLog = new RegExp(`console\\.log\\s*\\(\\s*${name}\\s*\\)`).exec(code)
+            const update = new RegExp(`\\b${name}\\s*=\\s*${name}\\s*\\+\\s*5\\b`).exec(code)
+            return Boolean(firstLog && update && firstLog.index < update.index)
+          },
+          message: "Print the starting score before adding its points.",
         },
         {
           test: (code) => !/\bconst\s+\w+\s*=\s*\d/.test(code),

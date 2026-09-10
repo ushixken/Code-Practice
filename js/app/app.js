@@ -1348,7 +1348,6 @@ function buildRoadmapPath() {
         </div>`
       if (!checkpointLocked) checkpointNode.addEventListener("click", () => {
         loadRoadmapLesson(idx)
-        requestAnimationFrame(() => document.querySelector("[data-main-practical-start]")?.click())
       })
       roadmapNodesEl.appendChild(checkpointNode)
     }
@@ -1490,7 +1489,6 @@ function loadRoadmapLesson(idx) {
           <div class="roadmap-explanation-label">CONCEPT</div>
           ${lesson.content}
           ${conceptBridgeMarkup(lesson)}
-          ${isDone ? roadmapMainPracticalMarkup(lesson.id) : ""}
         </div>
       </aside>
     </div>
@@ -1874,11 +1872,6 @@ function showRoadmapPracticals(lessonId) {
   if (!bodyEl.querySelector(".roadmap-practical-library")) {
     const practicalMarkup = roadmapPracticalsMarkup(lessonId)
     if (practicalMarkup) editorWrap.insertAdjacentHTML("beforebegin", practicalMarkup)
-  }
-  if (!bodyEl.querySelector(".roadmap-main-practical")) {
-    const mainMarkup = roadmapMainPracticalMarkup(lessonId)
-    const explanation = roadmapDetailEl.querySelector(".roadmap-explanation-body")
-    if (mainMarkup && explanation) explanation.insertAdjacentHTML("beforeend", mainMarkup)
   }
   bindRoadmapPracticalActions()
 }

@@ -357,6 +357,9 @@ body {
   white-space: pre;
   overflow: auto;
   tab-size: 2;
+  /* Keep JavaScript operators literal: show => and >= as two typed characters. */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
   word-wrap: normal;
 }
 #highlightLayer {
@@ -817,6 +820,9 @@ body {
   white-space: pre;
   overflow: auto;
   tab-size: 2;
+  /* Avoid font ligatures such as ⇒ or ≥ in the learning editor. */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
   word-wrap: normal;
 }
 #roadmapHighlightLayer {
@@ -1072,6 +1078,8 @@ body {
   border-radius: 6px;
   padding: 9px 12px;
   font-family: var(--mono);
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
   font-size: 12px;
   line-height: 1.65;
   color: var(--text-1);

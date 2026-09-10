@@ -907,6 +907,30 @@ const ROADMAP = [
     ],
   },
   {
+    id: "foundationRecap",
+    level: "easy",
+    title: "Foundation Recap: Boxes, Recipes, Decisions",
+    summary: "Connect the ideas you have used so far",
+    content: `
+      <p>You have already used the three building blocks behind most small programs. This is a pause to connect them before you add larger kinds of data.</p>
+      <div class="roadmap-recap-grid">
+        <section><b>LABELED BOX</b><p>A variable keeps one value under a useful name, such as <code>score</code>.</p></section>
+        <section><b>RECIPE</b><p>A function groups steps behind a name, then returns a result when you call it.</p></section>
+        <section><b>DECISION</b><p>A condition chooses which step to take after JavaScript answers a true-or-false question.</p></section>
+      </div>
+      <p>Arrays are ordered lists, and loops repeat a rule across those lists. FizzBuzz combined a list, a loop, and decisions—the same habit you will use in larger programs.</p>
+      <div class="example"><b>const topic = "loops";<br>const reminder = &#96;Practice: ${"${topic}"}&#96;;<br>console.log(reminder);</b><br>→ Practice: loops</div>
+    `,
+    fnName: "makeReminder",
+    starter: "function makeReminder(topic) {\n  // Store the word Practice in a constant.\n  // Return a template-literal reminder for topic.\n\n}",
+    task: "Use a labeled constant and a template literal to return <code>Practice: </code> followed by <code>topic</code>.",
+    testMode: "io",
+    tests: [
+      [["loops"], "Practice: loops"],
+      [["arrays"], "Practice: arrays"],
+    ],
+  },
+  {
     id: "objects",
     level: "medium",
     title: "Objects",
@@ -984,7 +1008,7 @@ const ROADMAP = [
       <p><code>arr.map(fn)</code> returns a new array with <code>fn</code> applied to every element. <code>arr.filter(fn)</code> returns a new array keeping only elements where <code>fn</code> returns true.</p>
       <div class="example"><b>const numbers = [1, 2, 3];<br>const squares = numbers.map(number =&gt; number * number);<br>console.log(squares);</b><br>→ [1, 4, 9]</div>
       <div class="example"><b>const scores = [4, 10, 15];<br>const passing = scores.filter(score =&gt; score >= 10);<br>console.log(passing);</b><br>→ [10, 15]</div>
-      <p><code>find()</code> returns the first matching item; <code>some()</code> asks whether at least one item matches; <code>every()</code> asks whether all match. <code>reduce()</code> combines a list into one value, such as a total, and <code>sort()</code> rearranges a list—copy first if you need to keep the original order.</p>
+      <p>This workspace practices <code>map()</code> and <code>reduce()</code>. <code>find()</code> returns the first matching item; <code>some()</code> asks whether at least one item matches; <code>every()</code> asks whether all match. <code>sort()</code> rearranges a list—copy first if you need to keep the original order.</p>
     `,
     fnName: "summarizeNumbers",
     starter:
@@ -1266,6 +1290,46 @@ const ROADMAP = [
     ],
   },
   {
+    id: "webAppRecap",
+    level: "hard",
+    title: "Web App Recap: Waiting, Boundaries, Recovery",
+    summary: "Connect async work, modules, and error handling",
+    content: `
+      <p>Before the project work, connect three ideas that make browser programs reliable: some work takes time, code belongs in focused files, and risky work needs a recovery path.</p>
+      <div class="roadmap-recap-grid">
+        <section><b>WAITING</b><p>A Promise is a result that will arrive later. <code>await</code> lets an async function wait for it.</p></section>
+        <section><b>BOUNDARIES</b><p>A module exports one focused capability and imports it only where it is needed.</p></section>
+        <section><b>RECOVERY</b><p><code>try/catch</code> gives a known failure path instead of letting an error surprise the user.</p></section>
+      </div>
+      <div class="example"><b>try {<br>&nbsp;&nbsp;const data = await loadData();<br>&nbsp;&nbsp;return data;<br>} catch (error) {<br>&nbsp;&nbsp;return "Try again";<br>}</b></div>
+      <p>Keep these responsibilities separate in a project: one function loads data, another decides what to show, and a small fallback explains what the user can do next.</p>
+    `,
+    fnName: "requestMessage",
+    starter: "async function requestMessage(loadData) {\n  // Await loadData(). On success, return `Ready: ${data}`.\n  // If it rejects, catch the error and return \"Try again\".\n\n}",
+    task: "Write an async function that awaits <code>loadData()</code> inside a <code>try/catch</code>. Return <code>Ready: </code> plus the resolved value on success, or <code>\"Try again\"</code> if it rejects.",
+    sourceRequirements: [
+      { test: (code) => /\basync\s+function\s+requestMessage\b/.test(code), message: "Define requestMessage as an async function." },
+      { test: (code) => /\btry\s*\{/.test(code) && /\bcatch\s*(?:\([^)]*\))?\s*\{/.test(code), message: "Handle the request with a try/catch block." },
+      { test: (code) => /\bawait\s+\w+\s*\(\s*\)/.test(code), message: "Await the supplied loader function." },
+    ],
+    testMode: "custom",
+    validate: async (fn) => {
+      const lines = []
+      const okLoader = () => Promise.resolve("Ada")
+      const failLoader = () => Promise.reject(new Error("network error"))
+      let successResult, failureResult
+      try { successResult = await fn(okLoader) } catch (error) { successResult = undefined }
+      try { failureResult = await fn(failLoader) } catch (error) { failureResult = undefined }
+      const ok = successResult === "Ready: Ada" && failureResult === "Try again"
+      if (!ok) {
+        lines.push(successResult !== "Ready: Ada" ? "✗ On success, return `Ready: ` plus the resolved value." : "✗ On failure, catch the rejection and return \"Try again\".")
+      } else {
+        lines.push("✓ Awaited the Promise and handled both outcomes.")
+      }
+      return { ok, lines }
+    },
+  },
+  {
     id: "foundationProjects",
     level: "hard",
     title: "Final Foundation Projects",
@@ -1350,7 +1414,8 @@ const ROADMAP = [
     summary: "Testing, debugging, performance, Node.js, and projects",
     content: `
       <p>Professional JavaScript means writing code that other people can understand, test, and safely change. Use clear names, small functions, version control, tests, and browser or Node debugging tools.</p>
-      <div class="example"><b>// Given → when → then<br>expect(add(2, 3)).toBe(5);</b></div>
+      <div class="example"><b>function add(a, b) {<br>&nbsp;&nbsp;return a + b;<br>}<br><br>console.assert(add(2, 3) === 5, "add should total 5");</b></div>
+      <p>This workspace uses <code>console.assert()</code> as a lightweight real check: it reports when an expectation is false. Debugging tools from the earlier lesson help you inspect a failure before changing code.</p>
       <p>Next, build projects in order: calculator → quiz or todo app → weather app → API-backed app → full-stack app. Learn Node.js, npm, modules, HTTP APIs, and a framework <em>after</em> the language foundations feel natural.</p>
     `,
     fnName: "formatName",
@@ -1387,6 +1452,7 @@ const CONCEPT_BRIDGES = {
   arrays: ["An array is one ordered list that can hold many values. Each value has a position, called an index.", "Indexes start at 0, so items[0] means the first item. Use arr.length when you need the number of items in the list."],
   loops: ["A loop repeats a job instead of making you copy the same line many times.", "For a for loop, identify the start, the keep-going question, and the change after each turn before reading the body."],
   fizzBuzz: ["This challenge combines a loop with conditions. The order of your conditions matters because JavaScript uses the first matching path.", "Check the most specific rule first: a number divisible by both 3 and 5 must be handled before either rule by itself."],
+  foundationRecap: ["A variable is a labeled box, a function is a recipe, and a condition is a decision. These three ideas work together in almost every program.", "Lists and loops let the same small rule work with many values. Use the concept names when you explain code to yourself."],
   objects: ["An object keeps related facts together using labeled properties. It is useful when several values describe one thing.", "Read project.name as: ‘from the project object, get the value stored under the name label.’"],
   scope: ["Scope describes where a name is available. A value created inside a function belongs to that function.", "This prevents separate parts of a program from accidentally changing each other’s values. Return a value when code outside needs it."],
   scopeClosures: ["A closure happens when an inner function remembers values from the outer function that created it.", "Think of the outer function as setting up private information; the returned inner function can still use that information later."],
@@ -1401,6 +1467,7 @@ const CONCEPT_BRIDGES = {
   apisData: ["An API is a way for one program to ask another program for data. Most web APIs send that data as JSON.", "Read nested data one level at a time, such as data.user.name. Check that each level exists before relying on it in a real app."],
   jsonData: ["JSON is text shaped like JavaScript data. It is useful for storage and communication, but it is not a live object until you parse it.", "stringify changes an object into text; parse changes valid JSON text back into an object."],
   browserStorage: ["Browser storage can remember small pieces of data after a page reloads. It stores text, so objects need JSON.stringify before saving.", "Use a clear key such as theme when saving, then use the same key when reading it back."],
+  webAppRecap: ["Web programs need to handle delayed data, keep code organized, and recover when a risky step fails.", "Await a Promise for delayed work, use modules for focused responsibilities, and use catch to choose a clear fallback."],
   thisKeyword: ["this is a way for a method to refer to the object it was called on.", "In user.greet(), this normally means user, so this.name reads user.name."],
   objectsPrototypes: ["Classes are templates for making similar objects. An instance is one object made from that template.", "A constructor runs when you use new. this refers to the particular object currently being created or used."],
   foundationProjects: ["Projects are where separate skills become one useful program. Build the smallest version first, then add one feature at a time.", "Before coding, name the user action, the information you need, and the result the user should see."],

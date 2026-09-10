@@ -582,6 +582,46 @@ window.ROADMAP_PRACTICALS = {
       ],
     },
   ],
+  foundationRecap: [
+    {
+      title: "Choose a study step",
+      prompt: "Scenario: store whether a learner is ready, use a function and an if statement to choose a study message, then print it.",
+      code: 'const isReady = true;\n\nfunction studyStep() {\n  if (isReady) {\n    return "Start the next lesson";\n  }\n  return "Review the last lesson";\n}\n\nconsole.log(studyStep());',
+      expectedOutput: ["Start the next lesson"],
+      requirements: [
+        {
+          test: (code) => /\bconst\s+\w+\s*=/.test(code),
+          message: "Store the readiness value in a constant.",
+        },
+        {
+          test: (code) => /\bfunction\s+\w+\s*\(/.test(code) && /\bif\s*\(/.test(code),
+          message: "Use a function with an if statement to make the decision.",
+        },
+      ],
+    },
+  ],
+  webAppRecap: [
+    {
+      title: "Recover from a failed request",
+      prompt: "Scenario: a request fails. Await the rejected Promise inside try/catch, then print the fallback message from catch.",
+      code: 'async function showStatus() {\n  try {\n    await Promise.reject(new Error("offline"));\n  } catch (error) {\n    console.log("Try again");\n  }\n}\n\nreturn showStatus();',
+      expectedOutput: ["Try again"],
+      requirements: [
+        {
+          test: (code) => /\btry\s*\{/.test(code) && /\bcatch\s*(?:\([^)]*\))?\s*\{/.test(code),
+          message: "Handle the failed request with try/catch.",
+        },
+        {
+          test: (code) => /\bawait\s+Promise\.reject\s*\(/.test(code),
+          message: "Await a rejected Promise inside the try block.",
+        },
+        {
+          test: (code) => /console\.log\s*\(\s*["']Try again["']\s*\)/.test(code),
+          message: "Print the fallback message from the catch block.",
+        },
+      ],
+    },
+  ],
 }
 
 // Interview-style checkpoints combine several completed lessons. Add a new

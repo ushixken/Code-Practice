@@ -1245,6 +1245,29 @@ body {
   letter-spacing: 0.06em;
 }
 .roadmap-quote-guide p { margin: 7px 0; font-size: 12.5px; line-height: 1.55; }
+.roadmap-recap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 13px 0;
+}
+.roadmap-recap-grid section {
+  padding: 10px;
+  border: 1px solid rgba(94, 165, 255, 0.28);
+  border-radius: 6px;
+  background: rgba(94, 165, 255, 0.045);
+}
+.roadmap-recap-grid b {
+  display: block;
+  color: #8fc3ff;
+  font: 10px var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.roadmap-recap-grid p { margin: 6px 0 0; font-size: 12px; line-height: 1.5; }
+@media (max-width: 760px) {
+  .roadmap-recap-grid { grid-template-columns: 1fr; }
+}
 .roadmap-practice.is-minimized {
   margin: 8px 0 10px;
   padding: 9px 11px;

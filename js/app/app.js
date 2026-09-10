@@ -641,7 +641,7 @@ const ROADMAP = [
         message: "Create the exact constant named in the goal.",
       },
       {
-        test: (code) => /console\.log\s*\(\s*`Type:\s*\$\{\s*typeof\s+answer\s*\}`\s*\)/.test(code),
+        test: (code) => /console\.log\s*\(\s*`Type:\s*\$\{\s*typeof\s*(?:\(\s*answer\s*\)|\s+answer)\s*\}`\s*\)/.test(code),
         message: "Use a template literal to inspect the exact variable named in the goal.",
       },
     ],
@@ -734,7 +734,7 @@ const ROADMAP = [
         message: "Check the exact variable and value named in the goal.",
       },
       {
-        test: (code) => /\?\s*["']go["']\s*:\s*["']stop["']/.test(code),
+        test: (code) => /\?/.test(code) && /["']go["']/.test(code) && /["']stop["']/.test(code),
         message: "Use a ternary to choose between the two requested actions.",
       },
     ],
@@ -775,6 +775,8 @@ const ROADMAP = [
     tests: [
       [["Ada"], "Hello, Ada!"],
       [["Bob"], "Hello, Bob!"],
+      [[""], "Hello, !"],
+      [["Ada-Lynn"], "Hello, Ada-Lynn!"],
     ],
   },
   {
@@ -827,6 +829,8 @@ const ROADMAP = [
       [[[1, 2, 3]], 3],
       [[["a", "b"]], "b"],
       [[["red", "blue", "green", "yellow"]], "yellow"],
+      [[["only"]], "only"],
+      [[[]], undefined],
     ],
   },
   {
@@ -852,6 +856,7 @@ const ROADMAP = [
       [[[1, 2, 3]], 6],
       [[[]], 0],
       [[[5, -5, 10]], 10],
+      [[[-4, -1, -5]], -10],
     ],
   },
   {
@@ -917,6 +922,8 @@ const ROADMAP = [
     tests: [
       [[{ first: "Ada", last: "Lovelace" }], "Ada Lovelace"],
       [[{ first: "Grace", last: "Hopper" }], "Grace Hopper"],
+      [[{ first: "A", last: "B" }], "A B"],
+      [[{ first: "", last: "" }], " "],
     ],
   },
   {
@@ -954,23 +961,15 @@ const ROADMAP = [
     testMode: "custom",
     validate: async (fn) => {
       const lines = []
-      const inner = fn(3)
-      if (typeof inner !== "function") {
-        lines.push("✗ multiplyBy(3) should return a function, not a value.")
-        return { ok: false, lines }
-      }
-      const cases = [
-        [5, 15],
-        [0, 0],
-        [-2, -6],
-      ]
+      const cases = [[3, 5, 15], [3, 0, 0], [3, -2, -6], [-2, 4, -8], [0, 9, 0]]
       let allOk = true
-      for (const [x, expected] of cases) {
-        const actual = inner(x)
-        const ok = actual === expected
+      for (const [factor, x, expected] of cases) {
+        const inner = fn(factor)
+        const actual = typeof inner === "function" ? inner(x) : undefined
+        const ok = typeof inner === "function" && actual === expected
         if (!ok) allOk = false
         lines.push(
-          `${ok ? "✓" : "✗"} multiplyBy(3)(${x}) → ${actual}${ok ? "" : `  (expected ${expected})`}`,
+          `${ok ? "✓" : "✗"} multiplyBy(${factor})(${x}) → ${actual}${ok ? "" : `  (expected ${expected})`}`,
         )
       }
       return { ok: allOk, lines }
@@ -1043,19 +1042,16 @@ const ROADMAP = [
     testMode: "custom",
     validate: async (fn) => {
       const lines = []
-      const result = fn(5)
-      if (!(result instanceof Promise)) {
-        lines.push(
-          "✗ delayedDouble(5) should return a Promise (did you forget `new Promise(...)`?)",
-        )
-        return { ok: false, lines }
+      const cases = [[5, 10], [0, 0], [-3, -6]]
+      let allOk = true
+      for (const [input, expected] of cases) {
+        const result = fn(input)
+        const actual = result instanceof Promise ? await result : undefined
+        const ok = result instanceof Promise && actual === expected
+        if (!ok) allOk = false
+        lines.push(`${ok ? "✓" : "✗"} await delayedDouble(${input}) → ${actual}${ok ? "" : `  (expected ${expected})`}`)
       }
-      const actual = await result
-      const ok = actual === 10
-      lines.push(
-        `${ok ? "✓" : "✗"} await delayedDouble(5) → ${actual}${ok ? "" : "  (expected 10)"}`,
-      )
-      return { ok, lines }
+      return { ok: allOk, lines }
     },
   },
   {
@@ -1077,6 +1073,9 @@ const ROADMAP = [
     tests: [
       [["ada@example.com"], true],
       [["no-at-sign"], false],
+      [[""], false],
+      [["@start"], true],
+      [["end@"], true],
     ],
   },
   {
@@ -1147,10 +1146,10 @@ const ROADMAP = [
     validate: async (fn) => {
       const logs = [], original = console.log
       console.log = (...values) => logs.push(values.join(" "))
-      let result
-      try { result = fn(3, 4) } finally { console.log = original }
-      const ok = result === 12 && logs.length > 0
-      return { ok, consoleOutput: logs, lines: [ok ? "✓ Returned and inspected the total." : "✗ Log the calculated total before returning it."] }
+      let first, second
+      try { first = fn(3, 4); second = fn(0, 6) } finally { console.log = original }
+      const ok = first === 12 && second === 0 && logs.includes("12") && logs.includes("0")
+      return { ok, consoleOutput: logs, lines: [ok ? "✓ Returned and inspected totals for more than one input." : "✗ Calculate, log, and return the total for every input."] }
     },
   },
   {
@@ -1167,7 +1166,11 @@ const ROADMAP = [
     starter: "function roundTripUser(user) {\n  // Convert user to JSON text, then back to an object.\n\n}",
     task: "Use <code>JSON.stringify()</code> then <code>JSON.parse()</code> to return a new object with the same data.",
     testMode: "io",
-    tests: [[[{ name: "Ada", points: 10 }], { name: "Ada", points: 10 }]],
+    tests: [
+      [[{ name: "Ada", points: 10 }], { name: "Ada", points: 10 }],
+      [[{}], {}],
+      [[{ profile: { name: "Mina" }, tags: ["new", "active"] }], { profile: { name: "Mina" }, tags: ["new", "active"] }],
+    ],
   },
   {
     id: "thisKeyword",
@@ -1184,8 +1187,8 @@ const ROADMAP = [
     task: "Return an object whose <code>greet()</code> method uses <code>this.name</code> to create a greeting.",
     testMode: "custom",
     validate: async (fn, source) => {
-      const user = fn("Ada")
-      const ok = user?.greet?.() === "Hi, Ada" && /this\.name/.test(source)
+      const ada = fn("Ada"), mina = fn("Mina")
+      const ok = ada?.greet?.() === "Hi, Ada" && mina?.greet?.() === "Hi, Mina" && /this\.name/.test(source)
       return { ok, lines: [ok ? "✓ Method used this.name correctly." : "✗ Return an object with greet() using this.name."] }
     },
   },
@@ -1203,7 +1206,11 @@ const ROADMAP = [
     starter: "function writeCommitMessage(feature) {\n  // Return a short action-style commit message.\n\n}",
     task: "Return an action-style commit message for the supplied feature, beginning with <code>\"Add \"</code>.",
     testMode: "io",
-    tests: [[["form validation"], "Add form validation"]],
+    tests: [
+      [["form validation"], "Add form validation"],
+      [["menu: keyboard support"], "Add menu: keyboard support"],
+      [[""], "Add "],
+    ],
   },
   {
     id: "browserStorage",
@@ -1230,7 +1237,9 @@ const ROADMAP = [
         if (previous === null) localStorage.removeItem("settings")
         else localStorage.setItem("settings", previous)
       }
-      const ok = result === "dark" && typeof stored === "string"
+      let saved
+      try { saved = JSON.parse(stored) } catch (error) { saved = null }
+      const ok = result === "dark" && saved?.theme === "dark"
       return { ok, lines: [ok ? "✓ Settings were stored and read back through localStorage." : "✗ Save JSON under settings, read it back, parse it, and return theme." ] }
     },
   },
@@ -1246,10 +1255,15 @@ const ROADMAP = [
     `,
     fnName: "readUserName",
     starter:
-      'function readUserName(data) {\n  // data is { user: { name: "Ada" } }.\n  // Return the name.\n\n}',
-    task: "Extract a value from API-like JSON data using object access.",
+      'function readUserName(data) {\n  // data can be { user: { name: "Ada" } }.\n  // Return the name, or undefined when it is missing.\n\n}',
+    task: "Extract a user name from API-like JSON data using safe object access. Return undefined when the name is missing.",
     testMode: "io",
-    tests: [[[{ user: { name: "Ada" } }], "Ada"]],
+    tests: [
+      [[{ user: { name: "Ada" } }], "Ada"],
+      [[{ user: {} }], undefined],
+      [[{}], undefined],
+      [[{ profile: { name: "Ada" } }], undefined],
+    ],
   },
   {
     id: "foundationProjects",
@@ -1271,7 +1285,7 @@ const ROADMAP = [
       const todos = fn()
       let ok = false
       try {
-        todos.add("Plan"); todos.add("Code"); todos.remove("Plan")
+        todos.add("Plan"); todos.add("Code"); todos.remove("Plan"); todos.remove("Missing")
         ok = typeof todos.add === "function" && typeof todos.remove === "function" && typeof todos.list === "function" && JSON.stringify(todos.list()) === JSON.stringify(["Code"])
       } catch (error) { ok = false }
       return { ok, lines: [ok ? "✓ Todo module adds, removes, and lists tasks." : "✗ Return a todo module with working add, remove, and list methods." ] }
@@ -1296,6 +1310,8 @@ const ROADMAP = [
     tests: [
       [[8, 2], 4],
       [[8, 0], "Cannot divide by zero"],
+      [[-9, 3], -3],
+      [[9, -2], -4.5],
     ],
   },
   {
@@ -1315,8 +1331,15 @@ const ROADMAP = [
     sourceRequirements: [{ test: (code) => /\bclass\s+\w+/.test(code) && /\bconstructor\s*\(/.test(code) && /\bgreet\s*\(/.test(code), message: "Define a class with a constructor and greet method." }],
     testMode: "custom",
     validate: async (fn) => {
-      let user, ok = false
-      try { user = fn("Ada"); ok = user && user.name === "Ada" && typeof user.greet === "function" && user.greet() === "Hello, Ada!" } catch (error) { ok = false }
+      let ada, shortName, emptyName, ok = false
+      try {
+        ada = fn("Ada"); shortName = fn("A"); emptyName = fn("")
+        ok = [
+          [ada, "Ada", "Hello, Ada!"],
+          [shortName, "A", "Hello, A!"],
+          [emptyName, "", "Hello, !"],
+        ].every(([user, name, greeting]) => user && user.name === name && typeof user.greet === "function" && user.greet() === greeting)
+      } catch (error) { ok = false }
       return { ok, lines: [ok ? "✓ Class instance has constructor data and a working method." : "✗ Return a class instance with name and greet()." ] }
     },
   },
@@ -1336,7 +1359,7 @@ const ROADMAP = [
     task: "Write the utility and a console.assert test that verifies formatName returns \"Ada\" for \"ada\".",
     testMode: "custom",
     validate: async (fn, source) => {
-      const ok = fn("ada") === "Ada" && /console\.assert\s*\(/.test(source)
+      const ok = fn("ada") === "Ada" && fn("grace") === "Grace" && /console\.assert\s*\(/.test(source)
       return { ok, lines: [ok ? "✓ Utility works and includes an assertion-style test." : "✗ Write formatName and add a console.assert test for it." ] }
     },
   },

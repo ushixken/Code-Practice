@@ -12,12 +12,16 @@ function roadmapMainPracticalFor(lessonId) {
 function roadmapMainPracticalMarkup(lessonId) {
   const practical = roadmapMainPracticalFor(lessonId)
   if (!practical) return ""
+  const attempts = (window.ROADMAP_MAIN_PRACTICAL_ATTEMPTS && window.ROADMAP_MAIN_PRACTICAL_ATTEMPTS[lessonId]) || 0
+  const hintsUnlocked = attempts >= 3
   return `
     <section class="roadmap-main-practical" aria-label="Interview checkpoint">
       <span class="rp-section-label">INTERVIEW CHECKPOINT</span>
       <h3>${practical.title}</h3>
       <p>${practical.prompt}</p>
       <div class="roadmap-practical-expected"><span>Expected output</span><code>${practical.expectedOutput.join("\n")}</code></div>
+      <button class="roadmap-main-practical-hint" type="button" data-main-practical-hint="${lessonId}" ${hintsUnlocked ? "" : "disabled"}>${hintsUnlocked ? "Show interview hint" : `Hint unlocks after ${3 - attempts} more attempt${3 - attempts === 1 ? "" : "s"}`}</button>
+      <p class="roadmap-main-practical-hint-text" data-main-practical-hint-text="${lessonId}" hidden></p>
       <button class="roadmap-main-practical-start" type="button" data-main-practical-start="${lessonId}">Start interview checkpoint</button>
     </section>
   `

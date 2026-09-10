@@ -1268,6 +1268,8 @@ function conceptBridgeMarkup(lesson) {
 let roadmapSolved = new Set()
 let roadmapPracticalSolved = new Set()
 let roadmapMainPracticalSolved = new Set()
+let roadmapMainPracticalAttempts = new Map()
+window.ROADMAP_MAIN_PRACTICAL_ATTEMPTS = {}
 let currentRoadmapIdx = 0
 let roadmapRanOnce = false
 let roadmapFunctionWrapperHidden = false
@@ -1329,6 +1331,27 @@ function buildRoadmapPath() {
       node.addEventListener("click", () => loadRoadmapLesson(idx))
     }
     roadmapNodesEl.appendChild(node)
+
+    const checkpoint = roadmapMainPracticalFor(lesson.id)
+    if (checkpoint) {
+      const checkpointDone = roadmapMainPracticalSolved.has(lesson.id)
+      const checkpointLocked = !roadmapPracticalSolved.has(lesson.id) && !checkpointDone
+      const checkpointNode = document.createElement("div")
+      checkpointNode.className = "roadmap-node roadmap-checkpoint-node" +
+        (checkpointLocked ? " locked" : "") + (checkpointDone ? " solved" : "")
+      checkpointNode.innerHTML = `
+          <div class="roadmap-node-dot">${checkpointDone ? "✓" : '<svg class="checkpoint-glyph" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 10 5 5 10 0 5Z" fill="currentColor"/></svg>'}</div>
+        <div class="roadmap-node-body">
+          <div class="roadmap-node-level">INTERVIEW</div>
+          <div class="roadmap-node-title">Checkpoint</div>
+          <div class="roadmap-node-summary">Use the skills above in one job-style scenario</div>
+        </div>`
+      if (!checkpointLocked) checkpointNode.addEventListener("click", () => {
+        loadRoadmapLesson(idx)
+        requestAnimationFrame(() => document.querySelector("[data-main-practical-start]")?.click())
+      })
+      roadmapNodesEl.appendChild(checkpointNode)
+    }
   })
   updateRoadmapProgress()
 }
@@ -1879,6 +1902,17 @@ function bindRoadmapPracticalActions() {
         startRoadmapMainPractical(button.dataset.mainPracticalStart),
       )
     })
+  roadmapDetailEl.querySelectorAll("[data-main-practical-hint]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const lessonId = button.dataset.mainPracticalHint
+      const hint = roadmapMainPracticalFor(lessonId)?.hints?.[0]
+      const target = roadmapDetailEl.querySelector(`[data-main-practical-hint-text="${lessonId}"]`)
+      if (hint && target) {
+        target.textContent = "Hint: " + hint
+        target.hidden = false
+      }
+    })
+  })
 }
 
 function startRoadmapPractical(lessonId, index = 0) {
@@ -2157,6 +2191,18 @@ async function runActiveRoadmapPractical(code) {
     else
       roadmapPracticalSolved.add(activeRoadmapPractical.lessonId)
     buildRoadmapPath()
+  } else if (activeRoadmapPractical.kind === "main") {
+    const lessonId = activeRoadmapPractical.lessonId
+    const attempts = (roadmapMainPracticalAttempts.get(lessonId) || 0) + 1
+    roadmapMainPracticalAttempts.set(lessonId, attempts)
+    window.ROADMAP_MAIN_PRACTICAL_ATTEMPTS[lessonId] = attempts
+    if (attempts >= 3) {
+      const hintButton = roadmapDetailEl.querySelector(`[data-main-practical-hint="${lessonId}"]`)
+      if (hintButton) {
+        hintButton.disabled = false
+        hintButton.textContent = "Show interview hint"
+      }
+    }
   }
   if (result.output.length) {
     terminal.innerHTML = '<div class="term-line term-info">Console output:</div>'

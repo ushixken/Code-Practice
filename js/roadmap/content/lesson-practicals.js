@@ -513,6 +513,7 @@ window.ROADMAP_MAIN_PRACTICALS = {
     title: "Interview checkpoint: learner score",
     prompt: "Interview scenario: A learner named Ada starts at score 0 and earns 10 points. Create the requested constant and changing score, then print Ada followed by the final score.",
     expectedOutput: ["Ada", "10"],
+    hints: ["First make one constant for Ada. Then use let for the value that changes from 0 to 10."],
     requirements: [
       { test: (code) => {
         const learner = code.match(/\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*["']Ada["']/)
@@ -532,6 +533,7 @@ window.ROADMAP_MAIN_PRACTICALS = {
     title: "Interview checkpoint: access decision",
     prompt: "Interview scenario: Write a function named getAccessMessage. It receives a score and returns \"Pass\" when the score is 10 or more; otherwise return \"Keep practicing\". Print the result for 12.",
     expectedOutput: ["Pass"],
+    hints: ["Write the function header first. Inside it, compare score with 10, then return one message for true and another for false."],
     requirements: [
       { test: (code) => /\bfunction\s+getAccessMessage\s*\(\s*score\s*\)/.test(code), message: "Create the function with the requested name and parameter." },
       { test: (code) => /\bif\s*\(\s*score\s*>=\s*10\s*\)/.test(code), message: "Use the requested score comparison inside an if statement." },

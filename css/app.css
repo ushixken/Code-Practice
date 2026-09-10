@@ -1077,6 +1077,28 @@ body {
   cursor: pointer;
 }
 .roadmap-main-practical.is-practicing .roadmap-main-practical-start { display: none; }
+.roadmap-main-practical-hint {
+  margin-right: 8px;
+  border: 1px solid #4b83bd;
+  border-radius: 5px;
+  padding: 6px 10px;
+  background: transparent;
+  color: #9bcaff;
+  font: 11px var(--mono);
+  cursor: pointer;
+}
+.roadmap-main-practical-hint:disabled { opacity: 0.48; cursor: not-allowed; }
+.roadmap-main-practical-hint-text { margin: 9px 0 0; color: #b8d9ff; font-size: 12px; line-height: 1.5; }
+.roadmap-checkpoint-node .roadmap-node-dot {
+  color: #7dbbff;
+  border-color: #4b83bd;
+  line-height: 1;
+}
+.roadmap-checkpoint-node .checkpoint-glyph {
+  display: block;
+}
+.roadmap-checkpoint-node .roadmap-node-level { color: #7dbbff; }
+.roadmap-checkpoint-node .roadmap-node-title { color: #a9d0ff; }
 .tok-unused {
   color: #69706d;
 }

@@ -514,9 +514,18 @@ window.ROADMAP_MAIN_PRACTICALS = {
     prompt: "Interview scenario: A learner named Ada starts at score 0 and earns 10 points. Create the requested constant and changing score, then print Ada followed by the final score.",
     expectedOutput: ["Ada", "10"],
     requirements: [
-      { test: (code) => /\bconst\s+user\s*=\s*["']Ada["']/.test(code), message: "Create the requested constant for the learner." },
-      { test: (code) => /\blet\s+score\s*=\s*0\b/.test(code) && /\bscore\s*=\s*score\s*\+\s*10\b/.test(code), message: "Use let to update the requested score from 0 by 10." },
-      { test: (code) => /console\.log\s*\(\s*user\s*\)/.test(code) && /console\.log\s*\(\s*score\s*\)/.test(code), message: "Print both requested values through their variables." },
+      { test: (code) => {
+        const learner = code.match(/\bconst\s+([A-Za-z_$][\w$]*)\s*=\s*["']Ada["']/)
+        if (!learner) return false
+        const name = learner[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        return new RegExp(`console\\.log\\s*\\(\\s*${name}\\s*\\)`).test(code)
+      }, message: "Store Ada in a constant, then print that same variable." },
+      { test: (code) => {
+        const score = code.match(/\blet\s+([A-Za-z_$][\w$]*)\s*=\s*0\b/)
+        if (!score) return false
+        const name = score[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        return new RegExp(`\\b${name}\\s*=\\s*${name}\\s*\\+\\s*10\\b`).test(code) && new RegExp(`console\\.log\\s*\\(\\s*${name}\\s*\\)`).test(code)
+      }, message: "Use let to update a score from 0 by 10, then print that same variable." },
     ],
   },
   functions: {

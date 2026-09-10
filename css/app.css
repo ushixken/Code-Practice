@@ -354,8 +354,10 @@ body {
   font-size: 13px;
   line-height: 20px;
   padding: 14px 16px;
-  white-space: pre;
-  overflow: auto;
+  white-space: pre-wrap;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-wrap: break-word;
   tab-size: 2;
   /* Keep JavaScript operators literal: show => and >= as two typed characters. */
   font-variant-ligatures: none;
@@ -863,8 +865,10 @@ body {
   font-size: 13px;
   line-height: 20px;
   padding: 12px 14px;
-  white-space: pre;
-  overflow: auto;
+  white-space: pre-wrap;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overflow-wrap: break-word;
   tab-size: 2;
   /* Avoid font ligatures such as ⇒ or ≥ in the learning editor. */
   font-variant-ligatures: none;

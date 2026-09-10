@@ -354,15 +354,14 @@ function renderTopicStepper(root, topic) {
             </div>
             <div class="topic-challenge-editor-footer">
               <button class="topic-reset-link" id="challengeReset" type="button">reset</button>
+              ${challenge.hint ? '<button class="topic-reset-link" id="challengeHint" type="button">Show hint</button>' : ""}
             </div>
           </div>
+          ${challenge.hint ? `<div class="topic-challenge-hint-panel" id="challengeHintText" hidden>Hint: <code>${escapeHtml(challenge.hint)}</code></div>` : ""}
           <div class="topic-challenge-console">
             <div class="topic-challenge-panel-label">Console output</div>
             <div id="challengeConsole">Console output will appear here.</div>
-          </div>
-          <div class="topic-challenge-check">
-            <div class="topic-challenge-panel-label">Lesson check</div>
-            <div id="challengeVerdict">Run your code to check the result.</div>
+            <div class="topic-challenge-console-check" id="challengeVerdict" hidden></div>
           </div>
           <div class="topic-challenge-nav">
             <span class="topic-challenge-progress">Challenge ${state.challengeIndex + 1} / ${topic.challenges.length}</span>
@@ -378,6 +377,8 @@ function renderTopicStepper(root, topic) {
     const nextBtn = root.querySelector("#challengeNext")
     const highlightEl = root.querySelector("#challengeHighlight")
     const gutterEl = root.querySelector("#challengeGutter")
+    const hintButton = root.querySelector("#challengeHint")
+    const hintText = root.querySelector("#challengeHintText")
 
     function refreshChallengeEditor() {
       let html = highlightCode(codeEl.value)
@@ -393,14 +394,23 @@ function renderTopicStepper(root, topic) {
     root.querySelector("#challengeReset").addEventListener("click", () => {
       codeEl.value = challenge.starter
       consoleEl.textContent = "Console output will appear here."
-      verdictEl.textContent = "Run your code to check the result."
+      verdictEl.hidden = true
+      verdictEl.innerHTML = ""
       nextBtn.dataset.passed = "false"
       nextBtn.textContent = "Run Code"
+      if (hintText) hintText.hidden = true
+      if (hintButton) hintButton.textContent = "Show hint"
       refreshChallengeEditor()
+    })
+
+    hintButton?.addEventListener("click", () => {
+      hintText.hidden = !hintText.hidden
+      hintButton.textContent = hintText.hidden ? "Show hint" : "Hide hint"
     })
 
     function runChallenge() {
       const { output, error } = runSnippetCode(codeEl.value)
+      verdictEl.hidden = false
 
       if (error) {
         // Real errors are shown verbatim, not replaced — this is intentional
@@ -423,8 +433,7 @@ function renderTopicStepper(root, topic) {
         nextBtn.dataset.passed = "true"
         nextBtn.textContent = "Next Challenge"
       } else {
-        verdictEl.innerHTML = `<div class="topic-challenge-verdict is-fail">✗ Not quite yet.</div>` +
-          (challenge.hint ? `<div class="topic-challenge-hint">Hint: <code>${escapeHtml(challenge.hint)}</code></div>` : "")
+        verdictEl.innerHTML = `<div class="topic-challenge-verdict is-fail">✗ Not quite yet.</div>`
         nextBtn.dataset.passed = "false"
         nextBtn.textContent = "Run Code"
       }

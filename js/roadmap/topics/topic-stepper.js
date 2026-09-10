@@ -19,6 +19,8 @@ function renderTopicStepper(root, topic) {
     hasRunCurrentStep: false,
     challengeIndex: 0,
     stepOutputs: new Map(),
+    challengeKeyboardAbort: null,
+    lessonKeyboardAbort: null,
   }
 
   function runSnippetCode(code) {
@@ -55,6 +57,8 @@ function renderTopicStepper(root, topic) {
   // LESSON STEPS
   // ---------------------------------------------------------------
   function renderStep() {
+    state.lessonKeyboardAbort?.abort()
+    state.lessonKeyboardAbort = new AbortController()
     const step = topic.steps[state.stepIndex]
     state.hasRunCurrentStep = false
 
@@ -298,12 +302,29 @@ function renderTopicStepper(root, topic) {
         continueButton.disabled = Boolean(topic.steps[activeIndex].requiresRun)
       }
     })
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== " " && event.key !== "Enter") return
+      if (event.ctrlKey || event.metaKey || event.altKey) return
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(event.target.tagName)) return
+      const continueButton = root.querySelector("#topicContinueBtn")
+      const runButton = activeContent.querySelector(".topic-run-btn")
+      event.preventDefault()
+      if (runButton && continueButton.disabled) {
+        runButton.click()
+      } else if (!continueButton.disabled) {
+        continueButton.click()
+      }
+    }, { signal: state.lessonKeyboardAbort.signal })
   }
 
   // ---------------------------------------------------------------
   // CHALLENGES
   // ---------------------------------------------------------------
   function renderChallenge() {
+    state.lessonKeyboardAbort?.abort()
+    state.challengeKeyboardAbort?.abort()
+    state.challengeKeyboardAbort = new AbortController()
     const challenge = topic.challenges[state.challengeIndex]
     const progressPct = Math.round(((state.challengeIndex) / topic.challenges.length) * 100)
 
@@ -458,6 +479,12 @@ function renderTopicStepper(root, topic) {
         codeEl.selectionStart = codeEl.selectionEnd = end + 1
       }
     })
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab" || event.target === codeEl) return
+      if (document.getElementById("challengeCode") !== codeEl) return
+      event.preventDefault()
+      codeEl.focus()
+    }, { signal: state.challengeKeyboardAbort.signal })
     refreshChallengeEditor()
 
     nextBtn.addEventListener("click", () => {
@@ -478,6 +505,8 @@ function renderTopicStepper(root, topic) {
   // DONE
   // ---------------------------------------------------------------
   function renderDone() {
+    state.challengeKeyboardAbort?.abort()
+    state.lessonKeyboardAbort?.abort()
     root.innerHTML = `
       <div class="topic-stepper">
         <div class="topic-stepper-done">

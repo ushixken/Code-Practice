@@ -1378,7 +1378,15 @@ function loadRoadmapLesson(idx) {
 
   roadmapDetailEl.innerHTML = `
     <div class="roadmap-lesson-layout">
-      <section class="roadmap-workspace rp-body">
+      <section class="roadmap-workspace rp-body is-concept-first">
+        <div class="roadmap-workspace-gate">
+          <div>
+            <span>READ THE CONCEPT FIRST</span>
+            <h3>Ready to try it yourself?</h3>
+            <p>When you are ready, open the workspace and write the code in your own words.</p>
+            <button class="roadmap-workspace-start" id="roadmapWorkspaceStart" type="button">Try it</button>
+          </div>
+        </div>
         <div class="roadmap-workspace-head">
           <span>Practice workspace</span>
           <strong>${lesson.title}</strong>
@@ -1479,6 +1487,11 @@ function loadRoadmapLesson(idx) {
   })
 
   const roadmapCodeInputEl = document.getElementById("roadmapCodeInput")
+  document.getElementById("roadmapWorkspaceStart").addEventListener("click", () => {
+    const workspace = roadmapDetailEl.querySelector(".roadmap-workspace")
+    if (workspace) workspace.classList.remove("is-concept-first")
+    roadmapCodeInputEl.focus()
+  })
   bindRoadmapPracticalActions()
   const hintsEl = document.getElementById("roadmapHints")
   const hintBtn = document.getElementById("roadmapHintBtn")

@@ -144,6 +144,7 @@
     toolbar.appendChild(sep1)
 
     const templatePicker = document.createElement("select")
+    templatePicker.name = "planner-template"
     templatePicker.className = "planner-template-picker"
     templatePicker.title = "Choose a planning template"
     templatePicker.innerHTML = `
@@ -229,7 +230,7 @@
           <strong>Arrow label</strong>
           <p>Describe this path, such as <em>yes</em>, <em>no</em>, <em>retry</em>, or <em>fails</em>.</p>
         </div>
-        <input class="planner-arrow-label-input" type="text" maxlength="60" placeholder="Type a label…" autocomplete="off">
+        <input class="planner-arrow-label-input" name="planner-arrow-label" type="text" maxlength="60" placeholder="Type a label…" autocomplete="off">
         <div class="planner-arrow-label-actions">
           <button type="button" data-arrow-label-action="cancel">Cancel</button>
           <button type="button" data-arrow-label-action="save">Save label</button>
@@ -1016,7 +1017,8 @@
 
     txt.addEventListener("dblclick", (e) => {
       e.stopPropagation()
-      const input = document.createElement("textarea")
+    const input = document.createElement("textarea")
+    input.name = "planner-node-text"
       input.className = "pnode-edit"
       input.value = n.text
       input.rows = 2
@@ -1056,6 +1058,7 @@
     summary.textContent = "Notes"
     summary.title = "Add planning notes, assumptions, or questions"
     const noteInput = document.createElement("textarea")
+    noteInput.name = "planner-node-note"
     noteInput.placeholder = "Assumptions, questions, clues…"
     noteInput.value = n.notes
     noteInput.rows = 3

@@ -1706,7 +1706,7 @@ function loadRoadmapLesson(idx) {
       </section>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — practical examples are now unlocked below.</div>' : ""}
       ${canPreview ? roadmapPracticalsMarkup(lesson.id) : ""}
-      ${lesson.livePreview ? '<section class="roadmap-live-preview"><div><span>LIVE PREVIEW</span><p>Interact with the page, then click an element to inspect it.</p></div><iframe id="roadmapLiveFrame" sandbox="allow-scripts allow-same-origin" title="Live lesson preview"></iframe><aside id="roadmapInspector">Click an element in the preview to inspect it.</aside></section>' : ""}
+      ${lesson.livePreview ? '<section class="roadmap-live-preview"><div><span>LIVE PREVIEW</span><p>Interact with the page, then click an element to inspect it.</p></div><iframe id="roadmapLiveFrame" sandbox="allow-scripts" title="Live lesson preview"></iframe><aside id="roadmapInspector">Click an element in the preview to inspect it.</aside></section>' : ""}
       ${
         roadmapFunctionWrapperHidden || lesson.standalone
           ? ""
@@ -2151,35 +2151,30 @@ function showRoadmapPracticals(lessonId) {
 function setupRoadmapLivePreview(lesson, code) {
   const frame = document.getElementById("roadmapLiveFrame")
   if (!frame) return
-  frame.srcdoc = `<!doctype html><html><body>${lesson.livePreview.html}</body></html>`
+  frame.srcdoc = `<!doctype html><html><body><script>window.addEventListener("message", event => { const data = event.data; if (!data || data.type !== "roadmap-live-preview") return; if (window.roadmapInspectListener) document.body.removeEventListener("click", window.roadmapInspectListener); document.body.innerHTML = data.html; window.roadmapInspectListener = clickEvent => { const el = clickEvent.target; parent.postMessage({ type: "roadmap-live-inspect", tag: el.tagName.toLowerCase(), id: el.id, className: String(el.className || ""), text: el.textContent.trim() }, "*") }; document.body.addEventListener("click", window.roadmapInspectListener); try { const fn = new Function(data.code + "\\nreturn " + data.fnName)(); if (data.previewType === "button") fn(); if (data.previewType === "form") { const form = document.querySelector("#nameForm"), input = document.querySelector("#nameInput"), message = document.querySelector("#message"); form && form.addEventListener("submit", submitEvent => fn(submitEvent, input, message)) } } catch (error) {} })<\/script></body></html>`
   frame.addEventListener("load", () => {
-    const doc = frame.contentDocument
-    doc.addEventListener("click", (event) => {
-      const el = event.target
-      const inspector = document.getElementById("roadmapInspector")
-      if (!inspector) return
-      const attrs = [el.id && `#${el.id}`, el.className && `.${String(el.className).trim().replace(/\s+/g, ".")}`].filter(Boolean).join("")
-      inspector.innerHTML = `<b>&lt;${el.tagName.toLowerCase()}&gt;${attrs}</b><span>text: ${el.textContent.trim() || "(empty)"}</span>`
-    })
+    bindRoadmapLivePreviewInspector()
     runRoadmapLivePreview(lesson, code)
   }, { once: true })
 }
 
 function runRoadmapLivePreview(lesson, code) {
   const frame = document.getElementById("roadmapLiveFrame")
-  const doc = frame?.contentDocument
-  if (!doc) return
-  try {
-    doc.body.innerHTML = lesson.livePreview.html
-    const fn = frame.contentWindow.Function(`${code}\nreturn ${lesson.fnName};`)()
-    if (lesson.livePreview.type === "button") fn()
-    if (lesson.livePreview.type === "form") {
-      const form = doc.querySelector("#nameForm"), input = doc.querySelector("#nameInput"), message = doc.querySelector("#message")
-      form?.addEventListener("submit", (event) => fn(event, input, message))
-    }
-  } catch (error) {
-    // The normal lesson terminal explains code errors; the preview stays usable.
-  }
+  frame?.contentWindow?.postMessage({ type: "roadmap-live-preview", html: lesson.livePreview.html, code, fnName: lesson.fnName, previewType: lesson.livePreview.type }, "*")
+}
+
+let roadmapLivePreviewInspectorBound = false
+function bindRoadmapLivePreviewInspector() {
+  if (roadmapLivePreviewInspectorBound) return
+  roadmapLivePreviewInspectorBound = true
+  window.addEventListener("message", (event) => {
+    const frame = document.getElementById("roadmapLiveFrame"), data = event.data
+    if (!frame || event.source !== frame.contentWindow || !data || data.type !== "roadmap-live-inspect") return
+    const inspector = document.getElementById("roadmapInspector")
+    if (!inspector) return
+    const classes = data.className.trim().replace(/\s+/g, ".")
+    inspector.innerHTML = `<b>&lt;${data.tag}&gt;${data.id ? `#${data.id}` : ""}${classes ? `.${classes}` : ""}</b><span>text: ${data.text || "(empty)"}</span>`
+  })
 }
 
 function bindRoadmapPracticalActions() {

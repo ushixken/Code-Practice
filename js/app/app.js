@@ -1978,14 +1978,6 @@ async function runRoadmapCode() {
     return String(v)
   }
 
-  if (lesson.requiresArrow && (!/=>/.test(code) || /\bfunction\b/.test(code))) {
-    printRoadmapLine(
-      "✗ This lesson requires an arrow function. Use => instead of function.",
-      "term-fail",
-    )
-    return
-  }
-
   // A goal that names a variable, value, or expression exactly should be
   // practiced exactly. Lessons without sourceRequirements intentionally leave
   // naming choices open for the learner.
@@ -1998,17 +1990,10 @@ async function runRoadmapCode() {
       }
     })
     .map((requirement) => requirement.message)
-  if (failedSourceRequirements.length) {
-    printRoadmapLine(
-      "✗ Your output may be right, but the goal's exact instruction is not yet followed.",
-      "term-fail",
+  if (lesson.requiresArrow && (!/=>/.test(code) || /\bfunction\b/.test(code)))
+    failedSourceRequirements.unshift(
+      "This lesson requires an arrow function. Use => instead of function.",
     )
-    failedSourceRequirements.forEach((message) =>
-      printRoadmapLine("  • " + message, "term-fail"),
-    )
-    return
-  }
-
   let fn
   try {
     const wrapper = new Function(`${code}\nreturn ${lesson.fnName};`)
@@ -2032,17 +2017,25 @@ async function runRoadmapCode() {
         consoleOutput.forEach((line) =>
           printRoadmapLine("  " + line, "term-info"),
         )
-        printRoadmapLine("Lesson check:", "term-dim")
       }
+      printRoadmapLine("Lesson check:", "term-dim")
       lines.forEach((line) =>
         printRoadmapLine(
           line,
           line.startsWith("✓") ? "term-pass" : "term-fail",
         ),
       )
-      if (ok) {
+      if (ok && failedSourceRequirements.length === 0) {
         printRoadmapLine("All checks passed. Nice work.", "term-pass")
         markRoadmapComplete(lesson.id)
+      } else if (failedSourceRequirements.length) {
+        printRoadmapLine(
+          "✗ Your output may be right, but the goal's exact instruction is not yet followed.",
+          "term-fail",
+        )
+        failedSourceRequirements.forEach((message) =>
+          printRoadmapLine("  • " + message, "term-fail"),
+        )
       }
     } catch (err) {
       printRoadmapLine(
@@ -2054,6 +2047,7 @@ async function runRoadmapCode() {
   }
 
   let passCount = 0
+  printRoadmapLine("Lesson check:", "term-dim")
   for (let i = 0; i < lesson.tests.length; i++) {
     const [args, expected] = lesson.tests[i]
     const callStr = `${lesson.fnName}(${args.map(fmtRoadmapVal).join(", ")})`
@@ -2081,7 +2075,7 @@ async function runRoadmapCode() {
     }
   }
 
-  if (passCount === lesson.tests.length) {
+  if (passCount === lesson.tests.length && failedSourceRequirements.length === 0) {
     printRoadmapLine(
       `All ${passCount}/${lesson.tests.length} checks passed. Nice work.`,
       "term-pass",
@@ -2092,6 +2086,15 @@ async function runRoadmapCode() {
       `${passCount}/${lesson.tests.length} checks passed. Keep going.`,
       "term-info",
     )
+    if (failedSourceRequirements.length) {
+      printRoadmapLine(
+        "✗ Your output may be right, but the goal's exact instruction is not yet followed.",
+        "term-fail",
+      )
+      failedSourceRequirements.forEach((message) =>
+        printRoadmapLine("  • " + message, "term-fail"),
+      )
+    }
   }
 }
 
@@ -2164,6 +2167,12 @@ async function runActiveRoadmapPractical(code) {
       terminal.appendChild(resultLine)
     })
   }
+  const practicalCheckHeading = document.createElement("div")
+  practicalCheckHeading.className = "term-line term-dim"
+  practicalCheckHeading.textContent = activeRoadmapPractical.kind === "main"
+    ? "Interview check:"
+    : "Practical check:"
+  terminal.appendChild(practicalCheckHeading)
   const checkLine = document.createElement("div")
   checkLine.className = "term-line " + (isCorrect ? "term-pass" : "term-fail")
   checkLine.textContent = isCorrect

@@ -54,11 +54,17 @@ function escapeHtml(value) {
 
 function highlightCode(code) {
   // Muted until a const, let, or var name is used somewhere else in the code.
-  const declaredNames = [...code.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g)]
+  // Comments and strings can mention a name without actually using it, so
+  // remove them before counting references.
+  const codeForUsage = code.replace(
+    /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)/g,
+    (match) => " ".repeat(match.length),
+  )
+  const declaredNames = [...codeForUsage.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g)]
     .map((match) => match[1])
   const unusedNames = new Set(
     declaredNames.filter((name) => {
-      const uses = code.match(new RegExp(`\\b${name}\\b`, "g")) || []
+      const uses = codeForUsage.match(new RegExp(`\\b${name}\\b`, "g")) || []
       return uses.length === 1
     }),
   )

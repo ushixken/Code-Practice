@@ -106,12 +106,12 @@ window.ROADMAP_PRACTICALS = {
   operators: [
     {
       title: "Calculate a total",
-      prompt: "Add two prices and print the total.",
+      prompt: "Scenario: two items cost 10 each. Store their sum in a constant, then print that constant.",
       code: "const total = 12 + 8;\nconsole.log(total);",
       expectedOutput: ["20"],
       requirements: [
         {
-          test: (code) => /\bconst\s+\w+\s*=\s*[^;]*\+[^;]*;/.test(code),
+          test: (code) => /\bconst\s+\w+\s*=\s*[^;\n]*\+[^;\n]*(?:;|\n|$)/.test(code),
           message: "Store the sum of the two prices in a constant.",
         },
         {

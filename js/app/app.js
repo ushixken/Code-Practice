@@ -3041,12 +3041,16 @@ loadRoadmapLesson(0)
 
 function openTopicStepperPilot() {
   if (location.hash !== "#test-stepper") return
-  document.getElementById("app").innerHTML = '<div id="topicRoot"></div>'
-  renderTopicStepper(document.getElementById("topicRoot"), window.TOPIC_VARIABLES)
+  const app = document.getElementById("app")
+  app.innerHTML = '<div id="topicRoot"></div>'
+  const topicRoot = document.getElementById("topicRoot")
+  topicRoot.addEventListener("topic-complete", () => {
+    // The pilot replaces the app shell, so return through a clean normal load.
+    history.replaceState(null, "", location.pathname + location.search)
+    location.reload()
+  })
+  renderTopicStepper(topicRoot, window.TOPIC_VARIABLES)
 }
 
-document.getElementById("test-stepper")?.addEventListener("click", () => {
-  location.hash = "#test-stepper"
-})
 window.addEventListener("hashchange", openTopicStepperPilot)
 openTopicStepperPilot()

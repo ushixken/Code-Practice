@@ -1929,6 +1929,19 @@ function startRoadmapMainPractical(lessonId) {
   if (terminal) terminal.innerHTML = '<div class="term-line term-dim">Answer the interview scenario, then hit Run to check your output.</div>'
 }
 
+function scrollRoadmapTerminalIntoView() {
+  requestAnimationFrame(() => {
+    const terminal = document.getElementById("roadmapTerminal")
+    const workspace = terminal?.closest(".roadmap-workspace")
+    if (!workspace) return
+    // Wait until the terminal's new lines affect layout, then use the
+    // container's true scroll height instead of merely aligning the element.
+    requestAnimationFrame(() =>
+      workspace.scrollTo({ top: workspace.scrollHeight, behavior: "smooth" }),
+    )
+  })
+}
+
 async function runRoadmapCode() {
   roadmapRanOnce = true
   const lesson = ROADMAP[currentRoadmapIdx]
@@ -1950,6 +1963,7 @@ async function runRoadmapCode() {
     div.className = "term-line " + (cls || "")
     div.textContent = text
     termEl.appendChild(div)
+    scrollRoadmapTerminalIntoView()
   }
   const fmtRoadmapVal = (v) => {
     if (typeof v === "string") return JSON.stringify(v)
@@ -2105,6 +2119,7 @@ async function runActiveRoadmapPractical(code) {
     errorLine.className = "term-line term-fail"
     errorLine.textContent = "  " + result.error.message
     terminal.appendChild(errorLine)
+    scrollRoadmapTerminalIntoView()
     return
   }
 
@@ -2165,6 +2180,7 @@ async function runActiveRoadmapPractical(code) {
     expectedLine.textContent = "Expected console output: " + expectedOutput.join(" | ")
     terminal.appendChild(expectedLine)
   }
+  scrollRoadmapTerminalIntoView()
 }
 
 function showPracticalAdvanceError(message = "Finish this practical with the correct output before the next lesson unlocks.") {

@@ -1270,6 +1270,16 @@ let roadmapPracticalSolved = new Set()
 let roadmapMainPracticalSolved = new Set()
 let roadmapMainPracticalAttempts = new Map()
 window.ROADMAP_MAIN_PRACTICAL_ATTEMPTS = {}
+let adminMode = false
+Object.defineProperty(window, "admin", {
+  configurable: true,
+  get: () => adminMode,
+  set: (enabled) => {
+    adminMode = Boolean(enabled)
+    buildRoadmapPath()
+    if (roadmapDetailEl?.innerHTML.trim()) loadRoadmapLesson(currentRoadmapIdx)
+  },
+})
 let currentRoadmapIdx = 0
 let roadmapRanOnce = false
 let roadmapFunctionWrapperHidden = false
@@ -1288,6 +1298,7 @@ let roadmapLevelFilter = "all"
 
 function isRoadmapLessonLocked(idx) {
   if (idx < 0 || idx >= ROADMAP.length) return true
+  if (adminMode) return false
   const previousLesson = ROADMAP[idx - 1]
   const prevDone = idx === 0 || (
     roadmapPracticalSolved.has(previousLesson.id) &&
@@ -1335,7 +1346,7 @@ function buildRoadmapPath() {
     const checkpoint = roadmapMainPracticalFor(lesson.id)
     if (checkpoint) {
       const checkpointDone = roadmapMainPracticalSolved.has(lesson.id)
-      const checkpointLocked = !roadmapPracticalSolved.has(lesson.id) && !checkpointDone
+      const checkpointLocked = !adminMode && !roadmapPracticalSolved.has(lesson.id) && !checkpointDone
       const checkpointNode = document.createElement("div")
       checkpointNode.className = "roadmap-node roadmap-checkpoint-node" +
         (checkpointLocked ? " locked" : "") + (checkpointDone ? " solved" : "")
@@ -1347,7 +1358,7 @@ function buildRoadmapPath() {
           <div class="roadmap-node-summary">Use the skills above in one job-style scenario</div>
         </div>`
       if (!checkpointLocked) checkpointNode.addEventListener("click", () => {
-        loadRoadmapLesson(idx)
+        openRoadmapCheckpoint(lesson.id)
       })
       roadmapNodesEl.appendChild(checkpointNode)
     }
@@ -1390,6 +1401,7 @@ function loadRoadmapLesson(idx) {
   activeRoadmapPractical = null
   const lesson = ROADMAP[idx]
   const isDone = roadmapSolved.has(lesson.id)
+  const canPreview = isDone || adminMode
   const firstFunctionsLesson = ROADMAP.findIndex(
     (item) => item.id === "functions",
   )
@@ -1448,7 +1460,7 @@ function loadRoadmapLesson(idx) {
       </div>
       </section>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — practical examples are now unlocked below.</div>' : ""}
-      ${isDone ? roadmapPracticalsMarkup(lesson.id) : ""}
+      ${canPreview ? roadmapPracticalsMarkup(lesson.id) : ""}
       ${
         roadmapFunctionWrapperHidden || lesson.standalone
           ? ""
@@ -1473,7 +1485,7 @@ function loadRoadmapLesson(idx) {
         </button>
         <button class="reset-btn" id="roadmapResetBtn">Reset</button>
         <button class="roadmap-try-another-btn" id="roadmapTryAnotherBtn" type="button" hidden>Try another</button>
-        <button class="roadmap-next-btn" id="roadmapNextBtn" type="button" ${isDone ? "" : "disabled"}>Next</button>
+        <button class="roadmap-next-btn" id="roadmapNextBtn" type="button" ${isDone || adminMode ? "" : "disabled"}>Next</button>
         <button class="roadmap-skip-btn" id="roadmapSkipBtn">Already know this — mark as mastered</button>
       </div>
       <div class="roadmap-terminal" id="roadmapTerminal">
@@ -1580,13 +1592,13 @@ function loadRoadmapLesson(idx) {
       startRoadmapPractical(activeRoadmapPractical?.lessonId, activeRoadmapPractical?.index)
   })
   document.getElementById("roadmapNextBtn").addEventListener("click", () => {
-    if (!roadmapSolved.has(lesson.id)) return
-    if (roadmapPracticalsFor(lesson.id).length && !roadmapPracticalSolved.has(lesson.id)) {
+    if (!roadmapSolved.has(lesson.id) && !adminMode) return
+    if (!adminMode && roadmapPracticalsFor(lesson.id).length && !roadmapPracticalSolved.has(lesson.id)) {
       showPracticalAdvanceError()
       return
     }
-    if (roadmapMainPracticalFor(lesson.id) && !roadmapMainPracticalSolved.has(lesson.id)) {
-      showPracticalAdvanceError("Finish the interview checkpoint before the next lesson unlocks.")
+    if (!adminMode && roadmapMainPracticalFor(lesson.id) && !roadmapMainPracticalSolved.has(lesson.id)) {
+      openRoadmapCheckpoint(lesson.id)
       return
     }
     const nextIdx = currentRoadmapIdx + 1
@@ -1644,11 +1656,12 @@ function loadRoadmapLesson(idx) {
       if (activeRoadmapPractical) {
         if (activeRoadmapPractical.passed) {
           if (
+            !adminMode &&
             activeRoadmapPractical.kind !== "main" &&
             roadmapMainPracticalFor(activeRoadmapPractical.lessonId) &&
             !roadmapMainPracticalSolved.has(activeRoadmapPractical.lessonId)
           ) {
-            showPracticalAdvanceError("Start and finish the interview checkpoint before the next lesson unlocks.")
+            openRoadmapCheckpoint(activeRoadmapPractical.lessonId)
             return
           }
           const nextIdx = currentRoadmapIdx + 1
@@ -1972,6 +1985,33 @@ function startRoadmapMainPractical(lessonId) {
   if (retry) retry.hidden = false
   const terminal = document.getElementById("roadmapTerminal")
   if (terminal) terminal.innerHTML = '<div class="term-line term-dim">Answer the interview scenario, then hit Run to check your output.</div>'
+}
+
+function openRoadmapCheckpoint(lessonId) {
+  const lessonIndex = ROADMAP.findIndex((lesson) => lesson.id === lessonId)
+  const practical = roadmapMainPracticalFor(lessonId)
+  if (lessonIndex < 0 || !practical) return
+
+  // Start from the regular editor setup, then turn it into a dedicated
+  // checkpoint screen. The interview task is not part of the lesson's normal
+  // practice workspace or concept panel.
+  loadRoadmapLesson(lessonIndex)
+  const layout = roadmapDetailEl.querySelector(".roadmap-lesson-layout")
+  const workspace = roadmapDetailEl.querySelector(".roadmap-workspace")
+  const editorWrap = workspace?.querySelector(".roadmap-editor-wrap")
+  if (!layout || !workspace || !editorWrap) return
+  layout.classList.add("is-interview-checkpoint")
+  workspace.classList.remove("is-concept-first")
+  workspace.querySelector(".roadmap-workspace-gate")?.remove()
+  workspace.querySelector(".roadmap-practice")?.remove()
+  workspace.querySelector(".roadmap-complete-banner")?.remove()
+  workspace.querySelector(".roadmap-practical-library")?.remove()
+  workspace.querySelector(".roadmap-workspace-head").innerHTML =
+    '<span>Interview checkpoint</span><strong>Job-style JavaScript scenario</strong>'
+  editorWrap.insertAdjacentHTML("beforebegin", roadmapMainPracticalMarkup(lessonId))
+  roadmapDetailEl.querySelector(".roadmap-explanation")?.remove()
+  bindRoadmapPracticalActions()
+  startRoadmapMainPractical(lessonId)
 }
 
 function scrollRoadmapTerminalIntoView() {

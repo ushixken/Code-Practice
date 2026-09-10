@@ -717,6 +717,12 @@ body {
   background: var(--bg-0);
   position: relative;
 }
+.roadmap-lesson-layout.is-interview-checkpoint {
+  grid-template-columns: minmax(0, 1fr);
+}
+.roadmap-lesson-layout.is-interview-checkpoint .roadmap-workspace {
+  border-right: 0;
+}
 .roadmap-workspace.is-concept-first > :not(.roadmap-workspace-gate) {
   filter: blur(3px);
   opacity: 0.28;

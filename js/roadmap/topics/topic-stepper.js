@@ -123,6 +123,16 @@ function renderTopicStepper(root, topic) {
     const currentContent = document.createElement("div")
     currentContent.className = "topic-step-current"
     track.appendChild(currentContent)
+    const stepDistance = 200
+    let trackOffset = 0
+    let activeDistance = stepDistance
+    let waitingPreview = null
+
+    function reserveConsoleSpace(consoleBox) {
+      if (!waitingPreview) return
+      activeDistance = stepDistance + consoleBox.offsetHeight
+      waitingPreview.style.top = `calc(50% + ${trackOffset + activeDistance}px)`
+    }
 
     // One focused idea at a time keeps the active step at the screen center.
     const visibleSteps = [step]
@@ -174,9 +184,9 @@ function renderTopicStepper(root, topic) {
           } else {
             outEl.innerHTML = output.map((line) => `<span class="is-value">${escapeHtml(line)}</span>`).join("<br>")
           }
+          reserveConsoleSpace(consoleBox)
           state.stepOutputs.set(state.stepIndex, { output, error })
           s.lastRunResult = { output, error }
-          track.style.setProperty("--topic-step-distance", "280px")
           if (isCurrent && s.requiresRun) {
             state.hasRunCurrentStep = true
             const continueBtn = root.querySelector("#topicContinueBtn")
@@ -237,6 +247,7 @@ function renderTopicStepper(root, topic) {
         outEl.innerHTML = error
           ? `<span class="is-error">${error.name}: ${escapeHtml(error.message)}</span>`
           : output.map((line) => `<span class="is-value">${escapeHtml(line)}</span>`).join("<br>")
+        reserveConsoleSpace(consoleBox)
         state.stepOutputs.set(state.stepIndex, { output, error })
         activeStep.lastRunResult = { output, error }
         if (activeStep.requiresRun) {
@@ -247,11 +258,9 @@ function renderTopicStepper(root, topic) {
       })
     }
 
-    const stepDistance = 200
     let activeContent = currentContent
     let activeIndex = state.stepIndex
-    let trackOffset = 0
-    let waitingPreview = createWaitingStep(topic.steps[activeIndex + 1], stepDistance)
+    waitingPreview = createWaitingStep(topic.steps[activeIndex + 1], stepDistance)
 
     body.scrollTop = 0
 
@@ -266,7 +275,7 @@ function renderTopicStepper(root, topic) {
 
       activeContent.classList.add("is-scrolling-past")
       waitingPreview.classList.add("is-promoting")
-      const nextOffset = trackOffset + stepDistance
+      const nextOffset = trackOffset + activeDistance
       const scroll = track.animate(
         [
           { transform: `translateY(${-trackOffset}px)` },
@@ -281,6 +290,7 @@ function renderTopicStepper(root, topic) {
         activeIndex += 1
         state.stepIndex = activeIndex
         state.hasRunCurrentStep = false
+        activeDistance = stepDistance
         activeContent.classList.remove("is-promoting")
         activateWaitingStep(activeContent, topic.steps[activeIndex])
         root.querySelector(".topic-stepper-progress-fill").style.width = `${Math.round((activeIndex / topic.steps.length) * 100)}%`

@@ -807,13 +807,13 @@ const ROADMAP = [
     `,
     fnName: "lastItem",
     starter:
-      "function lastItem(arr) {\n  // Return the last element of arr.\n\n}",
-    task: "Return the last element of the array <code>arr</code>.",
+      'function lastItem(arr) {\n  // arr can hold multiple values, for example:\n  // ["notebook", "pen", "eraser"]\n  // Return the last value in arr.\n\n}',
+    task: "Return the last value from the multi-item array <code>arr</code>.",
     testMode: "io",
     tests: [
       [[[1, 2, 3]], 3],
       [[["a", "b"]], "b"],
-      [[[42]], 42],
+      [[["red", "blue", "green", "yellow"]], "yellow"],
     ],
   },
   {

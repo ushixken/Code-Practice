@@ -1198,6 +1198,21 @@ body {
   letter-spacing: 0.06em;
 }
 .roadmap-concept-bridge p { margin: 6px 0; color: var(--text-1); font-size: 12.5px; line-height: 1.55; }
+.roadmap-quote-guide {
+  margin: 13px 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(220, 194, 111, 0.35);
+  border-left: 3px solid #dcc26f;
+  border-radius: 6px;
+  background: rgba(220, 194, 111, 0.05);
+}
+.roadmap-quote-guide > span {
+  color: #dcc26f;
+  font: 10px var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.roadmap-quote-guide p { margin: 7px 0; font-size: 12.5px; line-height: 1.55; }
 .roadmap-practice.is-minimized {
   margin: 8px 0 10px;
   padding: 9px 11px;

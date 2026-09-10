@@ -620,6 +620,12 @@ const ROADMAP = [
     content: `
       <p>For now, learn three common kinds of value: <b>string</b> for text (<code>"hi"</code>), <b>number</b> for quantities (<code>42</code>), and <b>boolean</b> for true/false answers.</p>
       <p>The <code>typeof</code> operator tells you what type a value is at runtime: <code>typeof 5</code> is <code>"number"</code>, <code>typeof "hi"</code> is <code>"string"</code>.</p>
+      <div class="roadmap-quote-guide">
+        <span>QUOTES CHANGE THE MEANING</span>
+        <p>Without quotes, JavaScript looks for a value or variable. With quotes, JavaScript treats the characters as text exactly as written.</p>
+        <div class="example"><b>const user = "Ada";<br><br>console.log(user);<br>// Ada — use the value stored in user<br><br>console.log("user");<br>// user — print these four letters as text<br><br>console.log(5);<br>// 5 — a number<br><br>console.log("10");<br>// 10 — text that only looks like a number</b></div>
+        <p><b>Important:</b> <code>10</code> and <code>"10"</code> can look similar in the console, but JavaScript handles them differently. You can do math with <code>10</code>; <code>"10"</code> is a string.</p>
+      </div>
       <p>You will meet more complex values, such as arrays and objects, later in the roadmap.</p>
     `,
     fnName: "describeType",

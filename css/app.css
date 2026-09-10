@@ -2083,6 +2083,13 @@ body {
   opacity: 0.7;
 }
 
+.topic-step-snippet .topic-run-btn:disabled {
+  background: var(--bg-3);
+  color: var(--text-2);
+  cursor: default;
+  opacity: 1;
+}
+
 .topic-step-console {
   position: absolute;
   z-index: 1;

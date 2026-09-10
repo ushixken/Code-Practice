@@ -177,7 +177,10 @@ function renderTopicStepper(root, topic) {
           currentContent.appendChild(hint)
         }
 
-        box.querySelector(".topic-run-btn")?.addEventListener("click", () => {
+        const lessonRunButton = box.querySelector(".topic-run-btn")
+        lessonRunButton?.addEventListener("click", () => {
+          if (lessonRunButton.disabled) return
+          lessonRunButton.disabled = true
           const { output, error } = runSnippetCode(s.code)
           const consoleBox = box.querySelector(".topic-step-console")
           const outEl = box.querySelector(".topic-step-console-output")
@@ -243,6 +246,8 @@ function renderTopicStepper(root, topic) {
         </div>
       `)
       runButton.addEventListener("click", () => {
+        if (runButton.disabled) return
+        runButton.disabled = true
         const { output, error } = runSnippetCode(activeStep.code)
         const consoleBox = box.querySelector(".topic-step-console")
         const outEl = box.querySelector(".topic-step-console-output")

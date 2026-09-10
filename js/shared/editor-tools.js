@@ -52,7 +52,7 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
 }
 
-function highlightCode(code) {
+function highlightCode(code, { dimUnused = true } = {}) {
   // Muted until a const, let, or var name is used somewhere else in the code.
   // Comments and strings can mention a name without actually using it, so
   // remove them before counting references.
@@ -95,7 +95,7 @@ function highlightCode(code) {
         output += `<span class="tok-keyword">${escapeHtml(full)}</span>`
       else if (JS_BOOLEANS.has(identifier))
         output += `<span class="tok-boolean">${escapeHtml(full)}</span>`
-      else if (unusedNames.has(identifier))
+      else if (dimUnused && unusedNames.has(identifier))
         output += `<span class="tok-unused">${escapeHtml(full)}</span>`
       else
         output += /^\s*\(/.test(code.slice(tokenRe.lastIndex))

@@ -1358,6 +1358,14 @@ function loadRoadmapLesson(idx) {
     exampleCode.innerHTML = highlightCode(exampleCode.textContent)
   })
 
+  // A goal is written as a normal sentence. Only the exact JavaScript written
+  // inside <code> tags becomes a colored code chip, so beginners can tell
+  // what they must type without mistaking the whole instruction for code.
+  roadmapDetailEl.querySelectorAll(".roadmap-task-card code").forEach((code) => {
+    code.classList.add("roadmap-goal-code")
+    code.innerHTML = highlightCode(code.textContent, { dimUnused: false })
+  })
+
   const roadmapCodeInputEl = document.getElementById("roadmapCodeInput")
   bindRoadmapPracticalActions()
   const hintsEl = document.getElementById("roadmapHints")

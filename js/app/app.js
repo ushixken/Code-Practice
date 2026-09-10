@@ -1217,6 +1217,7 @@ ROADMAP.sort(
 
 let roadmapSolved = new Set()
 let roadmapPracticalSolved = new Set()
+let roadmapMainPracticalSolved = new Set()
 let currentRoadmapIdx = 0
 let roadmapRanOnce = false
 let roadmapFunctionWrapperHidden = false
@@ -1235,7 +1236,11 @@ let roadmapLevelFilter = "all"
 
 function isRoadmapLessonLocked(idx) {
   if (idx < 0 || idx >= ROADMAP.length) return true
-  const prevDone = idx === 0 || roadmapPracticalSolved.has(ROADMAP[idx - 1].id)
+  const previousLesson = ROADMAP[idx - 1]
+  const prevDone = idx === 0 || (
+    roadmapPracticalSolved.has(previousLesson.id) &&
+    (!roadmapMainPracticalFor(previousLesson.id) || roadmapMainPracticalSolved.has(previousLesson.id))
+  )
   const isDone = roadmapSolved.has(ROADMAP[idx].id)
   return !prevDone && !isDone
 }
@@ -1364,6 +1369,7 @@ function loadRoadmapLesson(idx) {
       </section>
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — practical examples are now unlocked below.</div>' : ""}
       ${isDone ? roadmapPracticalsMarkup(lesson.id) : ""}
+      ${isDone ? roadmapMainPracticalMarkup(lesson.id) : ""}
       ${
         roadmapFunctionWrapperHidden || lesson.standalone
           ? ""
@@ -1478,12 +1484,19 @@ function loadRoadmapLesson(idx) {
     roadmapCodeInputEl.focus()
   })
   document.getElementById("roadmapTryAnotherBtn").addEventListener("click", () => {
-    startRoadmapPractical(activeRoadmapPractical?.lessonId, activeRoadmapPractical?.index)
+    if (activeRoadmapPractical?.kind === "main")
+      startRoadmapMainPractical(activeRoadmapPractical.lessonId)
+    else
+      startRoadmapPractical(activeRoadmapPractical?.lessonId, activeRoadmapPractical?.index)
   })
   document.getElementById("roadmapNextBtn").addEventListener("click", () => {
     if (!roadmapSolved.has(lesson.id)) return
     if (roadmapPracticalsFor(lesson.id).length && !roadmapPracticalSolved.has(lesson.id)) {
       showPracticalAdvanceError()
+      return
+    }
+    if (roadmapMainPracticalFor(lesson.id) && !roadmapMainPracticalSolved.has(lesson.id)) {
+      showPracticalAdvanceError("Finish the interview checkpoint before the next lesson unlocks.")
       return
     }
     const nextIdx = currentRoadmapIdx + 1
@@ -1529,6 +1542,14 @@ function loadRoadmapLesson(idx) {
       e.preventDefault()
       if (activeRoadmapPractical) {
         if (activeRoadmapPractical.passed) {
+          if (
+            activeRoadmapPractical.kind !== "main" &&
+            roadmapMainPracticalFor(activeRoadmapPractical.lessonId) &&
+            !roadmapMainPracticalSolved.has(activeRoadmapPractical.lessonId)
+          ) {
+            showPracticalAdvanceError("Start and finish the interview checkpoint before the next lesson unlocks.")
+            return
+          }
           const nextIdx = currentRoadmapIdx + 1
           if (nextIdx < ROADMAP.length) loadRoadmapLesson(nextIdx)
         } else {
@@ -1757,15 +1778,15 @@ function showRoadmapMasteredBanner() {
 function showRoadmapPracticals(lessonId) {
   const bodyEl = roadmapDetailEl.querySelector(".roadmap-workspace")
   const editorWrap = bodyEl && bodyEl.querySelector(".roadmap-editor-wrap")
-  if (
-    !bodyEl ||
-    !editorWrap ||
-    bodyEl.querySelector(".roadmap-practical-library")
-  )
-    return
-  const practicalMarkup = roadmapPracticalsMarkup(lessonId)
-  if (editorWrap && practicalMarkup)
-    editorWrap.insertAdjacentHTML("beforebegin", practicalMarkup)
+  if (!bodyEl || !editorWrap) return
+  if (!bodyEl.querySelector(".roadmap-practical-library")) {
+    const practicalMarkup = roadmapPracticalsMarkup(lessonId)
+    if (practicalMarkup) editorWrap.insertAdjacentHTML("beforebegin", practicalMarkup)
+  }
+  if (!bodyEl.querySelector(".roadmap-main-practical")) {
+    const mainMarkup = roadmapMainPracticalMarkup(lessonId)
+    if (mainMarkup) editorWrap.insertAdjacentHTML("beforebegin", mainMarkup)
+  }
   bindRoadmapPracticalActions()
 }
 
@@ -1779,6 +1800,15 @@ function bindRoadmapPracticalActions() {
         const [lessonId, index] = button.dataset.practicalStart.split(":")
         startRoadmapPractical(lessonId, Number(index))
       })
+    })
+  roadmapDetailEl
+    .querySelectorAll("[data-main-practical-start]")
+    .forEach((button) => {
+      if (button.dataset.bound) return
+      button.dataset.bound = "true"
+      button.addEventListener("click", () =>
+        startRoadmapMainPractical(button.dataset.mainPracticalStart),
+      )
     })
 }
 
@@ -1810,6 +1840,30 @@ function startRoadmapPractical(lessonId, index = 0) {
   if (nextButton) nextButton.hidden = false
   const terminal = document.getElementById("roadmapTerminal")
   if (terminal) terminal.innerHTML = '<div class="term-line term-dim">Write your own solution, then hit Run to see its console output.</div>'
+}
+
+function startRoadmapMainPractical(lessonId) {
+  const practical = roadmapMainPracticalFor(lessonId)
+  if (!practical) return
+  activeRoadmapPractical = { lessonId, index: 0, practical, passed: false, kind: "main" }
+  const practiceSection = roadmapDetailEl.querySelector(".roadmap-practice")
+  if (practiceSection) {
+    practiceSection.classList.add("is-minimized")
+    practiceSection.setAttribute("aria-disabled", "true")
+  }
+  const checkpoint = roadmapDetailEl.querySelector(".roadmap-main-practical")
+  if (checkpoint) checkpoint.classList.add("is-practicing")
+  const editor = document.getElementById("roadmapCodeInput")
+  if (editor) {
+    editor.value = `// ${practical.prompt}\n\n`
+    updateRoadmapGutter()
+    refreshRoadmapHighlight()
+    editor.focus()
+  }
+  const retry = document.getElementById("roadmapTryAnotherBtn")
+  if (retry) retry.hidden = false
+  const terminal = document.getElementById("roadmapTerminal")
+  if (terminal) terminal.innerHTML = '<div class="term-line term-dim">Answer the interview scenario, then hit Run to check your output.</div>'
 }
 
 async function runRoadmapCode() {
@@ -2011,7 +2065,10 @@ async function runActiveRoadmapPractical(code) {
   const isCorrect = outputMatches && failedRequirements.length === 0
   activeRoadmapPractical.passed = isCorrect
   if (isCorrect) {
-    roadmapPracticalSolved.add(activeRoadmapPractical.lessonId)
+    if (activeRoadmapPractical.kind === "main")
+      roadmapMainPracticalSolved.add(activeRoadmapPractical.lessonId)
+    else
+      roadmapPracticalSolved.add(activeRoadmapPractical.lessonId)
     buildRoadmapPath()
   }
   if (result.output.length) {
@@ -2047,12 +2104,12 @@ async function runActiveRoadmapPractical(code) {
   }
 }
 
-function showPracticalAdvanceError() {
+function showPracticalAdvanceError(message = "Finish this practical with the correct output before the next lesson unlocks.") {
   const terminal = document.getElementById("roadmapTerminal")
   if (!terminal) return
   const errorLine = document.createElement("div")
   errorLine.className = "term-line term-fail"
-  errorLine.textContent = "✗ Finish this practical with the correct output before the next lesson unlocks."
+  errorLine.textContent = "✗ " + message
   terminal.appendChild(errorLine)
 }
 

@@ -504,3 +504,30 @@ window.ROADMAP_PRACTICALS = {
     },
   ],
 }
+
+// Interview-style checkpoints combine several completed lessons. Add a new
+// checkpoint after a lesson when the next group should stay locked until the
+// learner can use the earlier ideas together.
+window.ROADMAP_MAIN_PRACTICALS = {
+  values: {
+    title: "Interview checkpoint: learner score",
+    prompt: "Interview scenario: A learner named Ada starts at score 0 and earns 10 points. Create the requested constant and changing score, then print Ada followed by the final score.",
+    expectedOutput: ["Ada", "10"],
+    requirements: [
+      { test: (code) => /\bconst\s+user\s*=\s*["']Ada["']/.test(code), message: "Create the requested constant for the learner." },
+      { test: (code) => /\blet\s+score\s*=\s*0\b/.test(code) && /\bscore\s*=\s*score\s*\+\s*10\b/.test(code), message: "Use let to update the requested score from 0 by 10." },
+      { test: (code) => /console\.log\s*\(\s*user\s*\)/.test(code) && /console\.log\s*\(\s*score\s*\)/.test(code), message: "Print both requested values through their variables." },
+    ],
+  },
+  functions: {
+    title: "Interview checkpoint: access decision",
+    prompt: "Interview scenario: Write a function named getAccessMessage. It receives a score and returns \"Pass\" when the score is 10 or more; otherwise return \"Keep practicing\". Print the result for 12.",
+    expectedOutput: ["Pass"],
+    requirements: [
+      { test: (code) => /\bfunction\s+getAccessMessage\s*\(\s*score\s*\)/.test(code), message: "Create the function with the requested name and parameter." },
+      { test: (code) => /\bif\s*\(\s*score\s*>=\s*10\s*\)/.test(code), message: "Use the requested score comparison inside an if statement." },
+      { test: (code) => /\breturn\s+["']Pass["']/.test(code) && /\breturn\s+["']Keep practicing["']/.test(code), message: "Return the requested message for each decision." },
+      { test: (code) => /console\.log\s*\(\s*getAccessMessage\s*\(\s*12\s*\)\s*\)/.test(code), message: "Print the function result for the interview input." },
+    ],
+  },
+}

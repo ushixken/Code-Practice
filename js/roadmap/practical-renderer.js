@@ -5,6 +5,24 @@ function roadmapPracticalsFor(lessonId) {
   )
 }
 
+function roadmapMainPracticalFor(lessonId) {
+  return (window.ROADMAP_MAIN_PRACTICALS && window.ROADMAP_MAIN_PRACTICALS[lessonId]) || null
+}
+
+function roadmapMainPracticalMarkup(lessonId) {
+  const practical = roadmapMainPracticalFor(lessonId)
+  if (!practical) return ""
+  return `
+    <section class="roadmap-main-practical" aria-label="Interview checkpoint">
+      <span class="rp-section-label">INTERVIEW CHECKPOINT</span>
+      <h3>${practical.title}</h3>
+      <p>${practical.prompt}</p>
+      <div class="roadmap-practical-expected"><span>Expected output</span><code>${practical.expectedOutput.join("\n")}</code></div>
+      <button class="roadmap-main-practical-start" type="button" data-main-practical-start="${lessonId}">Start interview checkpoint</button>
+    </section>
+  `
+}
+
 function roadmapPracticalsMarkup(lessonId) {
   const practicals = roadmapPracticalsFor(lessonId)
   if (!practicals.length) return ""

@@ -1007,6 +1007,26 @@ body {
 .roadmap-practical-library.is-practicing .roadmap-practical-start {
   display: none;
 }
+.roadmap-main-practical {
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid rgba(94, 165, 255, 0.45);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(94, 165, 255, 0.1), transparent 55%), var(--bg-1);
+}
+.roadmap-main-practical .rp-section-label { margin: 0 0 5px; color: #79b8ff; }
+.roadmap-main-practical h3 { margin: 0; font-size: 14px; }
+.roadmap-main-practical > p { margin: 7px 0; color: var(--text-1); font-size: 12.5px; line-height: 1.5; }
+.roadmap-main-practical-start {
+  border: 1px solid #4b83bd;
+  border-radius: 5px;
+  padding: 6px 10px;
+  background: rgba(94, 165, 255, 0.1);
+  color: #9bcaff;
+  font: 11px var(--mono);
+  cursor: pointer;
+}
+.roadmap-main-practical.is-practicing .roadmap-main-practical-start { display: none; }
 .tok-unused {
   color: #69706d;
 }

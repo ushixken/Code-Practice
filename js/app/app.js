@@ -822,8 +822,13 @@ const ROADMAP = [
     title: "Loops",
     summary: "Repeating work with for, while, and for...of",
     content: `
-      <p>A <code>for</code> loop repeats code a set number of times: <code>for (let i = 0; i &lt; n; i++) { ... }</code>.</p>
-      <p><code>for (const item of arr)</code> is a cleaner way to walk through every item in an array when you don't need the index.</p>
+      <p><b>Use a loop when the same job must happen more than once.</b> Instead of writing <code>console.log()</code> for every item yourself, you describe the rule once and JavaScript repeats it for you.</p>
+      <p>Read a <code>for</code> loop from left to right in three small parts: <code>let i = 0</code> creates a counter, <code>i &lt; items.length</code> asks whether another item exists, and <code>i++</code> moves the counter forward after each turn. The code inside <code>{ }</code> runs only while the middle question is true.</p>
+      <div class="example"><b>const items = ["pen", "book", "bag"];<br><br>for (let i = 0; i &lt; items.length; i++) {<br>&nbsp;&nbsp;console.log(items[i]);<br>}</b><br>→ pen<br>→ book<br>→ bag</div>
+      <p>On the first turn, <code>i</code> is <code>0</code>, so <code>items[i]</code> means <code>items[0]</code>: <code>"pen"</code>. Then <code>i++</code> makes it <code>1</code>. The loop stops before <code>i</code> reaches <code>items.length</code>, which prevents asking for an item that does not exist.</p>
+      <p>When you only need each value—not its position—use <code>for...of</code>. It reads like English: <code>for (const item of items)</code>. Start with this form for lists; use the numbered <code>for</code> loop when you also need the index.</p>
+      <div class="example"><b>for (const item of items) {<br>&nbsp;&nbsp;console.log(item);<br>}</b></div>
+      <p><b>Common mistake:</b> forgetting to change a <code>while</code> loop's counter can make it run forever. With a <code>for</code> loop, the update is visible in one place, which makes it a safer starting point.</p>
     `,
     fnName: "sumArray",
     starter:
@@ -1215,6 +1220,45 @@ ROADMAP.sort(
     window.ROADMAP_ORDER.indexOf(second.id),
 )
 
+// Every workspace gets a plain-language bridge between the short concept and
+// the code. Keep this separate from exercises so a learner can reread the idea
+// without being shown an answer.
+const CONCEPT_BRIDGES = {
+  firstProgram: ["A program is a list of instructions. JavaScript starts at the first line and follows the lines in order.", "Read console.log as: ‘show this value in the console.’ It is a safe way to see what your code is doing."],
+  consolePractice: ["The console is a place for your program to report information to you. It is for the programmer, not normally for a page visitor.", "Put the value you want to inspect inside console.log( ). Text needs double quotes because JavaScript must know it is text."],
+  variables: ["A variable is a labeled box that holds one value. The label lets you use the value again without retyping it.", "Read const user = \"Ada\" as: ‘make a box named user and keep Ada in it.’ Use the name user later to get the stored text."],
+  dataTypes: ["Values have types. A string is text, a number is a quantity, and a boolean is a true-or-false answer.", "typeof asks JavaScript to tell you a value’s type. It does not change the value; it only reports information about it."],
+  values: ["Use let for a value that will change as the program runs. The name stays the same while the value inside it changes.", "score = score + 10 means: take the current score, add 10, then put the new result back into score."],
+  operators: ["Operators are symbols that tell JavaScript to calculate or compare. Start by treating them like the buttons on a calculator.", "The expression on the right of = is worked out first. Then its result is stored in the name on the left."],
+  conditionals: ["A condition is a yes-or-no question. if runs its block only when that question is true.", "Read if (light === \"green\") as: ‘if light is exactly green, do the code inside the braces.’ else is the path for every other answer."],
+  functions: ["A function is a named recipe: you define the steps once, then call the recipe whenever you need it.", "Parameters are the inputs in the function’s parentheses. return is the value the recipe gives back to the code that called it."],
+  arrowFunctions: ["An arrow function is another way to write a function. It does the same job, but uses => instead of the function keyword.", "Read const triple = number => number * 3 as: ‘store a function named triple; it receives number and gives back number times three.’"],
+  arrays: ["An array is one ordered list that can hold many values. Each value has a position, called an index.", "Indexes start at 0, so items[0] means the first item. Use arr.length when you need the number of items in the list."],
+  loops: ["A loop repeats a job instead of making you copy the same line many times.", "For a for loop, identify the start, the keep-going question, and the change after each turn before reading the body."],
+  fizzBuzz: ["This challenge combines a loop with conditions. The order of your conditions matters because JavaScript uses the first matching path.", "Check the most specific rule first: a number divisible by both 3 and 5 must be handled before either rule by itself."],
+  objects: ["An object keeps related facts together using labeled properties. It is useful when several values describe one thing.", "Read project.name as: ‘from the project object, get the value stored under the name label.’"],
+  scope: ["Scope describes where a name is available. A value created inside a function belongs to that function.", "This prevents separate parts of a program from accidentally changing each other’s values. Return a value when code outside needs it."],
+  scopeClosures: ["A closure happens when an inner function remembers values from the outer function that created it.", "Think of the outer function as setting up private information; the returned inner function can still use that information later."],
+  arrayMethods: ["Array methods let you transform a list without manually managing a counter. map changes every item; filter keeps matching items.", "Each method receives a small function that explains what to do with one item. The method creates a new array instead of changing the original by default."],
+  es6: ["Destructuring gives a short name to a value inside an array or object. Spread copies existing values into a new array or object.", "Use a new object when you want a changed version while keeping the original safe to reuse."],
+  stringMethods: ["Strings are text values with useful built-in methods. A method is an action you ask that text to perform.", "name.toUpperCase() creates uppercase text. Store or print the returned result because the original string does not change itself."],
+  domEvents: ["The DOM is JavaScript’s view of the web page. An event tells your code that something happened, such as a click.", "First select an element, then attach a listener. The function inside the listener runs later, when that event occurs."],
+  formsValidation: ["Form validation checks input before you trust or use it. Start with one small rule and give a clear message when it fails.", "preventDefault stops the browser’s usual form submission so your JavaScript can check the input first."],
+  async: ["Some work takes time, such as requesting data. A Promise represents the result that will arrive later.", "then runs after a Promise succeeds. await pauses only the async function until that result is ready, making the steps easier to read."],
+  modulesErrors: ["Modules split a program into focused files. Error handling gives your program a planned response when a risky action fails.", "Put the risky code in try. Put the recovery code in catch. This keeps one failure from becoming a confusing crash."],
+  apisData: ["An API is a way for one program to ask another program for data. Most web APIs send that data as JSON.", "Read nested data one level at a time, such as data.user.name. Check that each level exists before relying on it in a real app."],
+  browserStorage: ["Browser storage can remember small pieces of data after a page reloads. It stores text, so objects need JSON.stringify before saving.", "Use a clear key such as theme when saving, then use the same key when reading it back."],
+  objectsPrototypes: ["Classes are templates for making similar objects. An instance is one object made from that template.", "A constructor runs when you use new. this refers to the particular object currently being created or used."],
+  foundationProjects: ["Projects are where separate skills become one useful program. Build the smallest version first, then add one feature at a time.", "Before coding, name the user action, the information you need, and the result the user should see."],
+  professionalPractice: ["Professional JavaScript is not only about code working once. It is about clear names, small pieces, tests, and safe changes.", "Use tests to describe what a function should do before a future change accidentally breaks it."],
+}
+
+function conceptBridgeMarkup(lesson) {
+  const bridge = CONCEPT_BRIDGES[lesson.id]
+  if (!bridge) return ""
+  return `<section class="roadmap-concept-bridge"><span>READ THIS FIRST</span><p>${bridge[0]}</p><p><b>How to read the code:</b> ${bridge[1]}</p></section>`
+}
+
 let roadmapSolved = new Set()
 let roadmapPracticalSolved = new Set()
 let roadmapMainPracticalSolved = new Set()
@@ -1409,6 +1453,7 @@ function loadRoadmapLesson(idx) {
         <div class="roadmap-explanation-body">
           <div class="roadmap-explanation-label">CONCEPT</div>
           ${lesson.content}
+          ${conceptBridgeMarkup(lesson)}
         </div>
       </aside>
     </div>

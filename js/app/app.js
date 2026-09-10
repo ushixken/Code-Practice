@@ -620,6 +620,7 @@ const ROADMAP = [
     content: `
       <p>For now, learn three common kinds of value: <b>string</b> for text (<code>"hi"</code>), <b>number</b> for quantities (<code>42</code>), and <b>boolean</b> for true/false answers.</p>
       <p>The <code>typeof</code> operator tells you what type a value is at runtime: <code>typeof 5</code> is <code>"number"</code>, <code>typeof "hi"</code> is <code>"string"</code>.</p>
+      <p>Use a <b>template literal</b> when text needs a value inside it: backticks wrap the text and <code>${"${user}"}</code> inserts a variable. Example: <code>&#96;Hello, ${"${user}"}!&#96;</code>.</p>
       <div class="roadmap-quote-guide">
         <span>QUOTES CHANGE THE MEANING</span>
         <p>Without quotes, JavaScript looks for a value or variable. With quotes, JavaScript treats the characters as text exactly as written.</p>
@@ -630,18 +631,18 @@ const ROADMAP = [
     `,
     fnName: "describeType",
     starter:
-      "function describeType() {\n  // Create a variable named answer with the value 42,\n  // then print its type with typeof.\n\n}",
+      "function describeType() {\n  // Create answer with the value 42.\n  // Use a template literal to print: Type: number\n\n}",
     solution:
-      "function describeType() {\n  const answer = 42;\n  console.log(typeof answer);\n}",
-    task: "Create <code>const answer = 42</code>, then use <code>console.log(typeof answer)</code> to print its type.",
+      "function describeType() {\n  const answer = 42;\n  console.log(`Type: ${typeof answer}`);\n}",
+    task: "Create <code>const answer = 42</code>, then use a template literal with <code>typeof answer</code> to print <code>Type: number</code>.",
     sourceRequirements: [
       {
         test: (code) => /\bconst\s+answer\s*=\s*42\b/.test(code),
         message: "Create the exact constant named in the goal.",
       },
       {
-        test: (code) => /console\.log\s*\(\s*typeof\s+answer\s*\)/.test(code),
-        message: "Inspect the exact variable named in the goal.",
+        test: (code) => /console\.log\s*\(\s*`Type:\s*\$\{\s*typeof\s+answer\s*\}`\s*\)/.test(code),
+        message: "Use a template literal to inspect the exact variable named in the goal.",
       },
     ],
     testMode: "custom",
@@ -654,12 +655,12 @@ const ROADMAP = [
       } finally {
         console.log = originalLog
       }
-      const ok = output.includes("number")
+      const ok = output.includes("Type: number")
       return {
         ok,
         consoleOutput: output,
         lines: [
-          `${ok ? "✓" : "✗"} Lesson check: typeof answer should print "number".`,
+          `${ok ? "✓" : "✗"} Lesson check: the template literal should print "Type: number".`,
         ],
       }
     },
@@ -713,14 +714,16 @@ const ROADMAP = [
     content: `
       <p>A comparison asks a true/false question. Use <code>===</code> to check whether two values are the same, and <code>>=</code> to check whether one number is at least another.</p>
       <p><code>if</code>/<code>else</code> uses that true/false answer to choose a path. Chain <code>else if</code> for multiple choices.</p>
+      <p>For one short choice, use a <b>ternary</b>: <code>score >= 10 ? "Pass" : "Try again"</code>. Combine conditions with <code>&amp;&amp;</code> (both must be true), <code>||</code> (either may be true), and <code>??</code> (use a fallback only for <code>null</code> or <code>undefined</code>).</p>
+      <p>Use <code>switch</code> when one value has several named cases, such as a day or status. Always include a <code>default</code> path for values you did not expect.</p>
       <div class="example"><b>if (score >= 10) {<br>&nbsp;&nbsp;console.log("High score");<br>} else {<br>&nbsp;&nbsp;console.log("Keep practicing");<br>}</b></div>
     `,
     fnName: "trafficAction",
     starter:
-      'function trafficAction() {\n  // Create light with the value "green".\n  // If it is green, print "go".\n\n}',
+      'function trafficAction() {\n  // Create light with the value "green".\n  // Use if as a guard, then use a ternary to choose the action.\n\n}',
     solution:
-      'function trafficAction() {\n  const light = "green";\n  if (light === "green") {\n    console.log("go");\n  }\n}',
-    task: 'Create <code>const light = "green"</code>. Use an <code>if</code> statement to print <code>"go"</code> when the light is green.',
+      'function trafficAction() {\n  const light = "green";\n  if (light === "green") {\n    const action = light === "green" ? "go" : "stop";\n    console.log(action);\n  }\n}',
+    task: 'Create <code>const light = "green"</code>. Use an <code>if</code> statement as the green-light guard. Inside it, use a ternary to choose <code>"go"</code> or <code>"stop"</code>, then print the chosen action.',
     sourceRequirements: [
       {
         test: (code) => /\bconst\s+light\s*=\s*["']green["']/.test(code),
@@ -729,6 +732,10 @@ const ROADMAP = [
       {
         test: (code) => /\bif\s*\(\s*light\s*===\s*["']green["']\s*\)/.test(code),
         message: "Check the exact variable and value named in the goal.",
+      },
+      {
+        test: (code) => /\?\s*["']go["']\s*:\s*["']stop["']/.test(code),
+        message: "Use a ternary to choose between the two requested actions.",
       },
     ],
     testMode: "custom",
@@ -972,22 +979,27 @@ const ROADMAP = [
   {
     id: "arrayMethods",
     level: "hard",
-    title: "Array Methods (map / filter)",
+    title: "Array Methods (map / reduce)",
     summary: "Transforming arrays without manual loops",
     content: `
       <p><code>arr.map(fn)</code> returns a new array with <code>fn</code> applied to every element. <code>arr.filter(fn)</code> returns a new array keeping only elements where <code>fn</code> returns true.</p>
       <div class="example"><b>const numbers = [1, 2, 3];<br>const squares = numbers.map(number =&gt; number * number);<br>console.log(squares);</b><br>→ [1, 4, 9]</div>
       <div class="example"><b>const scores = [4, 10, 15];<br>const passing = scores.filter(score =&gt; score >= 10);<br>console.log(passing);</b><br>→ [10, 15]</div>
+      <p><code>find()</code> returns the first matching item; <code>some()</code> asks whether at least one item matches; <code>every()</code> asks whether all match. <code>reduce()</code> combines a list into one value, such as a total, and <code>sort()</code> rearranges a list—copy first if you need to keep the original order.</p>
     `,
-    fnName: "doubleAll",
+    fnName: "summarizeNumbers",
     starter:
-      "function doubleAll(arr) {\n  // Return a new array with every number doubled.\n\n}",
-    task: "Return a new array with every number in <code>arr</code> doubled, using <code>map</code>.",
+      "function summarizeNumbers(arr) {\n  // Use map to double every number.\n  // Use reduce to calculate the total, then return both.\n\n}",
+    task: "Use <code>map</code> to make a doubled array and <code>reduce</code> to calculate the original total. Return <code>{ doubled, total }</code>.",
+    sourceRequirements: [
+      { test: (code) => /\.map\s*\(/.test(code), message: "Use map to create the doubled array." },
+      { test: (code) => /\.reduce\s*\(/.test(code), message: "Use reduce to calculate the total." },
+    ],
     testMode: "io",
     tests: [
-      [[[1, 2, 3]], [2, 4, 6]],
-      [[[]], []],
-      [[[-1, 0, 5]], [-2, 0, 10]],
+      [[[1, 2, 3]], { doubled: [2, 4, 6], total: 6 }],
+      [[[]], { doubled: [], total: 0 }],
+      [[[-1, 0, 5]], { doubled: [-2, 0, 10], total: 4 }],
     ],
   },
   {
@@ -1076,6 +1088,7 @@ const ROADMAP = [
       <p>The <b>DOM</b> is JavaScript’s view of a web page. Use <code>document.querySelector()</code> to find an element, then update <code>textContent</code>, <code>classList</code>, or attach an event listener.</p>
       <div class="example"><b>button.addEventListener("click", () =&gt; {<br>&nbsp;&nbsp;message.textContent = "Saved!";<br>});</b></div>
       <p>Events are how the browser tells your program that something happened: a click, key press, form submission, or input change.</p>
+      <p>Clicks bubble from the clicked element up through its parents. <b>Event delegation</b> uses one listener on a parent and checks <code>event.target</code>, which is useful for buttons added later.</p>
     `,
     fnName: "buttonMessage",
     starter:
@@ -1116,6 +1129,81 @@ const ROADMAP = [
       const ok = event.stopped && message.textContent === "Enter your name"
       return { ok, lines: [ok ? "✓ Form submission was stopped and the validation message appeared." : "✗ Stop the event and show the message for an empty input." ] }
     },
+  },
+  {
+    id: "debuggingTools",
+    level: "medium",
+    title: "Debugging Tools",
+    summary: "Inspect values, pause code, and find mistakes",
+    content: `
+      <p>Debugging is the process of finding why code behaves differently than you expect. Start by checking the smallest fact you are unsure about.</p>
+      <div class="example"><b>const total = price * quantity;<br>console.log({ price, quantity, total });<br>debugger;</b></div>
+      <p><code>console.log()</code> shows values. The browser DevTools <b>Sources</b> panel lets you add a breakpoint; <code>debugger;</code> creates a breakpoint from code when DevTools is open. At a pause, inspect variables one at a time instead of guessing.</p>
+    `,
+    fnName: "inspectTotal",
+    starter: "function inspectTotal(price, quantity) {\n  // Calculate total, log it, then return it.\n\n}",
+    task: "Calculate a total, use <code>console.log()</code> to inspect it, then return the same total.",
+    testMode: "custom",
+    validate: async (fn) => {
+      const logs = [], original = console.log
+      console.log = (...values) => logs.push(values.join(" "))
+      let result
+      try { result = fn(3, 4) } finally { console.log = original }
+      const ok = result === 12 && logs.length > 0
+      return { ok, consoleOutput: logs, lines: [ok ? "✓ Returned and inspected the total." : "✗ Log the calculated total before returning it."] }
+    },
+  },
+  {
+    id: "jsonData",
+    level: "hard",
+    title: "JSON Data",
+    summary: "Convert between JavaScript values and stored text",
+    content: `
+      <p>JSON is a text format for moving and saving structured data. JavaScript objects are live values; JSON is the text version of those values.</p>
+      <div class="example"><b>const user = { name: "Ada" };<br>const text = JSON.stringify(user);<br>const restored = JSON.parse(text);<br>console.log(restored.name);</b><br>→ Ada</div>
+      <p>Use <code>JSON.stringify()</code> before storing an object, and <code>JSON.parse()</code> after reading its text back. Invalid JSON throws an error, so parsing external text belongs inside <code>try/catch</code>.</p>
+    `,
+    fnName: "roundTripUser",
+    starter: "function roundTripUser(user) {\n  // Convert user to JSON text, then back to an object.\n\n}",
+    task: "Use <code>JSON.stringify()</code> then <code>JSON.parse()</code> to return a new object with the same data.",
+    testMode: "io",
+    tests: [[[{ name: "Ada", points: 10 }], { name: "Ada", points: 10 }]],
+  },
+  {
+    id: "thisKeyword",
+    level: "hard",
+    title: "The this Keyword",
+    summary: "Refer to the object that called a method",
+    content: `
+      <p>Inside a regular object method, <code>this</code> usually means the object before the dot that called the method. It lets one method use that object’s own data.</p>
+      <div class="example"><b>const user = {<br>&nbsp;&nbsp;name: "Ada",<br>&nbsp;&nbsp;greet() { return "Hi, " + this.name; }<br>};<br>console.log(user.greet());</b><br>→ Hi, Ada</div>
+      <p>Arrow functions do not create their own <code>this</code>; they keep it from the surrounding code. Use regular method syntax for a first class or object method while learning this rule.</p>
+    `,
+    fnName: "makeUser",
+    starter: "function makeUser(name) {\n  // Return an object with name and greet().\n  // greet() should use this.name.\n\n}",
+    task: "Return an object whose <code>greet()</code> method uses <code>this.name</code> to create a greeting.",
+    testMode: "custom",
+    validate: async (fn, source) => {
+      const user = fn("Ada")
+      const ok = user?.greet?.() === "Hi, Ada" && /this\.name/.test(source)
+      return { ok, lines: [ok ? "✓ Method used this.name correctly." : "✗ Return an object with greet() using this.name."] }
+    },
+  },
+  {
+    id: "gitBasics",
+    level: "hard",
+    title: "Git Basics",
+    summary: "Save meaningful checkpoints in version control",
+    content: `
+      <p>Git records changes to a project so you can review, share, and safely return to earlier work. A commit is a named checkpoint, not a backup of every keystroke.</p>
+      <div class="example"><b>git status<br>git add src/todo.js<br>git commit -m "Add todo removal"</b></div>
+      <p>Use <code>git status</code> to see what changed, <code>git add</code> to choose what belongs together, and <code>git commit</code> to save one clear change. Write commit messages that begin with an action, such as “Add validation”.</p>
+    `,
+    fnName: "writeCommitMessage",
+    starter: "function writeCommitMessage(feature) {\n  // Return a short action-style commit message.\n\n}",
+    task: "Return an action-style commit message for the supplied feature, beginning with <code>\"Add \"</code>.",
+    testMode: "io",
+    tests: [[["form validation"], "Add form validation"]],
   },
   {
     id: "browserStorage",
@@ -1198,6 +1286,7 @@ const ROADMAP = [
       <p>Modules keep files focused. Export a value with <code>export</code>, then use <code>import</code> where it is needed. This prevents large programs from becoming one hard-to-navigate file.</p>
       <div class="example"><b>export function add(a, b) {<br>&nbsp;&nbsp;return a + b;<br>}<br><br>import { add } from "./math.js";</b></div>
       <p>Use <code>try/catch</code> around work that can fail, especially network requests and JSON parsing. Give errors useful messages so future you can solve them.</p>
+      <p>An error object has a useful <code>message</code>. Create intentional failures with <code>throw new Error("message")</code>; in <code>catch (error)</code>, inspect <code>error.message</code> before deciding how to recover.</p>
     `,
     fnName: "safeDivide",
     starter:
@@ -1283,13 +1372,17 @@ const CONCEPT_BRIDGES = {
   stringMethods: ["Strings are text values with useful built-in methods. A method is an action you ask that text to perform.", "name.toUpperCase() creates uppercase text. Store or print the returned result because the original string does not change itself."],
   domEvents: ["The DOM is JavaScript’s view of the web page. An event tells your code that something happened, such as a click.", "First select an element, then attach a listener. The function inside the listener runs later, when that event occurs."],
   formsValidation: ["Form validation checks input before you trust or use it. Start with one small rule and give a clear message when it fails.", "preventDefault stops the browser’s usual form submission so your JavaScript can check the input first."],
+  debuggingTools: ["Debugging replaces guessing with evidence. Check one value at the point where it becomes surprising.", "Use console.log to inspect a value and a breakpoint or debugger to pause before the next line runs."],
   async: ["Some work takes time, such as requesting data. A Promise represents the result that will arrive later.", "then runs after a Promise succeeds. await pauses only the async function until that result is ready, making the steps easier to read."],
   modulesErrors: ["Modules split a program into focused files. Error handling gives your program a planned response when a risky action fails.", "Put the risky code in try. Put the recovery code in catch. This keeps one failure from becoming a confusing crash."],
   apisData: ["An API is a way for one program to ask another program for data. Most web APIs send that data as JSON.", "Read nested data one level at a time, such as data.user.name. Check that each level exists before relying on it in a real app."],
+  jsonData: ["JSON is text shaped like JavaScript data. It is useful for storage and communication, but it is not a live object until you parse it.", "stringify changes an object into text; parse changes valid JSON text back into an object."],
   browserStorage: ["Browser storage can remember small pieces of data after a page reloads. It stores text, so objects need JSON.stringify before saving.", "Use a clear key such as theme when saving, then use the same key when reading it back."],
+  thisKeyword: ["this is a way for a method to refer to the object it was called on.", "In user.greet(), this normally means user, so this.name reads user.name."],
   objectsPrototypes: ["Classes are templates for making similar objects. An instance is one object made from that template.", "A constructor runs when you use new. this refers to the particular object currently being created or used."],
   foundationProjects: ["Projects are where separate skills become one useful program. Build the smallest version first, then add one feature at a time.", "Before coding, name the user action, the information you need, and the result the user should see."],
   professionalPractice: ["Professional JavaScript is not only about code working once. It is about clear names, small pieces, tests, and safe changes.", "Use tests to describe what a function should do before a future change accidentally breaks it."],
+  gitBasics: ["Git saves meaningful project checkpoints so you can understand and recover changes later.", "A small commit contains one coherent change and has a message that says what changed."],
 }
 
 function conceptBridgeMarkup(lesson) {
@@ -1333,8 +1426,11 @@ function isRoadmapLessonLocked(idx) {
   if (idx < 0 || idx >= ROADMAP.length) return true
   if (adminMode) return false
   const previousLesson = ROADMAP[idx - 1]
+  const previousNeedsPractical = roadmapPracticalsFor(previousLesson?.id).length > 0
   const prevDone = idx === 0 || (
-    roadmapPracticalSolved.has(previousLesson.id) &&
+    (previousNeedsPractical
+      ? roadmapPracticalSolved.has(previousLesson.id)
+      : roadmapSolved.has(previousLesson.id)) &&
     (!roadmapMainPracticalFor(previousLesson.id) || roadmapMainPracticalSolved.has(previousLesson.id))
   )
   const isDone = roadmapSolved.has(ROADMAP[idx].id)

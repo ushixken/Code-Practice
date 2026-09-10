@@ -514,6 +514,74 @@ window.ROADMAP_PRACTICALS = {
       ],
     },
   ],
+  debuggingTools: [
+    {
+      title: "Inspect a calculation",
+      prompt: "Scenario: two tickets cost 15 each. Calculate the total, inspect it in the console, then print it.",
+      code: "const price = 15;\nconst quantity = 2;\nconst total = price * quantity;\nconsole.log(total);",
+      expectedOutput: ["30"],
+      requirements: [
+        {
+          test: (code) => /\bconst\s+total\s*=/.test(code) && /console\.log\s*\(\s*total\s*\)/.test(code),
+          message: "Store the calculation in total, then inspect that variable.",
+        },
+      ],
+    },
+  ],
+  jsonData: [
+    {
+      title: "Round-trip a profile",
+      prompt: "Scenario: convert a learner profile to JSON text, restore it, then print the restored role.",
+      code: 'const profile = { role: "learner" };\nconst text = JSON.stringify(profile);\nconst restored = JSON.parse(text);\nconsole.log(restored.role);',
+      expectedOutput: ["learner"],
+      requirements: [
+        {
+          test: (code) => /JSON\.stringify\s*\(/.test(code) && /JSON\.parse\s*\(/.test(code),
+          message: "Convert the profile to JSON text and parse it back.",
+        },
+        {
+          test: (code) => /console\.log\s*\(\s*restored\.role\s*\)/.test(code),
+          message: "Print the role from the restored object.",
+        },
+      ],
+    },
+  ],
+  thisKeyword: [
+    {
+      title: "Introduce a team member",
+      prompt: "Scenario: make a team member object whose introduce method uses this.name, then print its introduction.",
+      code: 'const member = {\n  name: "Mina",\n  introduce() {\n    return "I am " + this.name;\n  },\n};\nconsole.log(member.introduce());',
+      expectedOutput: ["I am Mina"],
+      requirements: [
+        {
+          test: (code) => /this\.name/.test(code),
+          message: "Use this.name inside the object's method.",
+        },
+        {
+          test: (code) => /console\.log\s*\(\s*member\.introduce\s*\(\s*\)\s*\)/.test(code),
+          message: "Call the object's method and print its result.",
+        },
+      ],
+    },
+  ],
+  gitBasics: [
+    {
+      title: "Name a focused change",
+      prompt: "Scenario: you fixed an empty form submission. Store an action-style commit message, then print it for review.",
+      code: 'const message = "Fix empty form submission";\nconsole.log(message);',
+      expectedOutput: ["Fix empty form submission"],
+      requirements: [
+        {
+          test: (code) => /\bconst\s+\w+\s*=\s*["']Fix\s+empty\s+form\s+submission["']/.test(code),
+          message: "Store a concise action-style commit message in a constant.",
+        },
+        {
+          test: (code) => /console\.log\s*\(\s*\w+\s*\)/.test(code),
+          message: "Print the message variable for review.",
+        },
+      ],
+    },
+  ],
 }
 
 // Interview-style checkpoints combine several completed lessons. Add a new

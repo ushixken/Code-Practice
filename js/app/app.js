@@ -1079,13 +1079,19 @@ const ROADMAP = [
     `,
     fnName: "buttonMessage",
     starter:
-      "function buttonMessage(name) {\n  // In a real page, an event handler can use this\n  // value to update the DOM. Return a button message.\n\n}",
-    task: 'Return <code>name + " saved"</code>. This keeps the example focused on the value a click handler would display.',
-    testMode: "io",
-    tests: [
-      [["Plan"], "Plan saved"],
-      [["Note"], "Note saved"],
-    ],
+      'function buttonMessage() {\n  // Find #saveButton and #message.\n  // When the button is clicked, set the message to "Saved!".\n\n}',
+    task: 'Use <code>document.querySelector()</code> and <code>addEventListener()</code> to make the provided Save button change the provided message to <code>"Saved!"</code>.',
+    sourceRequirements: [{ test: (code) => /document\.querySelector\s*\(/.test(code) && /\.addEventListener\s*\(\s*["']click["']/.test(code), message: "Select the elements and attach a click listener." }],
+    testMode: "custom",
+    validate: async (fn) => {
+      const sandbox = document.createElement("div")
+      sandbox.innerHTML = '<button id="saveButton">Save</button><div id="message"></div>'
+      document.body.appendChild(sandbox)
+      const button = sandbox.querySelector("#saveButton"), message = sandbox.querySelector("#message")
+      try { fn(); button.click() } finally { sandbox.remove() }
+      const ok = message.textContent === "Saved!"
+      return { ok, lines: [ok ? "✓ Button click updated the message." : "✗ The click must update #message to Saved!." ] }
+    },
   },
   {
     id: "formsValidation",
@@ -1099,13 +1105,17 @@ const ROADMAP = [
     `,
     fnName: "isValidEmail",
     starter:
-      'function isValidEmail(email) {\n  // Return true when email contains "@".\n\n}',
-    task: 'Start with one clear validation rule: return whether the email contains <code>"@"</code>.',
-    testMode: "io",
-    tests: [
-      [["ada@example.com"], true],
-      [["not-an-email"], false],
-    ],
+      'function isValidEmail(event, input, message) {\n  // Stop submission. If input.value is empty,\n  // show "Enter your name" in message.textContent.\n\n}',
+    task: 'Validate a mock form submission: call <code>event.preventDefault()</code>, then show <code>"Enter your name"</code> when <code>input.value</code> is empty.',
+    sourceRequirements: [{ test: (code) => /\.preventDefault\s*\(\s*\)/.test(code), message: "Stop the form submission with preventDefault()." }],
+    testMode: "custom",
+    validate: async (fn) => {
+      const event = { stopped: false, preventDefault() { this.stopped = true } }
+      const input = { value: "" }, message = { textContent: "" }
+      fn(event, input, message)
+      const ok = event.stopped && message.textContent === "Enter your name"
+      return { ok, lines: [ok ? "✓ Form submission was stopped and the validation message appeared." : "✗ Stop the event and show the message for an empty input." ] }
+    },
   },
   {
     id: "browserStorage",
@@ -1119,10 +1129,22 @@ const ROADMAP = [
     `,
     fnName: "saveSetting",
     starter:
-      "function saveSetting(key, value) {\n  // Return an object that represents the setting to save.\n\n}",
-    task: "Return an object with the given key and value. This models the data before a browser stores it.",
-    testMode: "io",
-    tests: [[["theme", "dark"], { key: "theme", value: "dark" }]],
+      "function saveSetting() {\n  // Save { theme: \"dark\" } under the key \"settings\".\n  // Read it back, parse it, and return its theme.\n\n}",
+    task: 'Use <code>localStorage.setItem()</code>, <code>JSON.stringify()</code>, <code>localStorage.getItem()</code>, and <code>JSON.parse()</code> to save and read a settings object.',
+    sourceRequirements: [{ test: (code) => /localStorage\.setItem/.test(code) && /localStorage\.getItem/.test(code) && /JSON\.stringify/.test(code) && /JSON\.parse/.test(code), message: "Use localStorage and both JSON conversion methods." }],
+    testMode: "custom",
+    validate: async (fn) => {
+      const previous = localStorage.getItem("settings")
+      localStorage.removeItem("settings")
+      let result
+      let stored
+      try { result = fn(); stored = localStorage.getItem("settings") } finally {
+        if (previous === null) localStorage.removeItem("settings")
+        else localStorage.setItem("settings", previous)
+      }
+      const ok = result === "dark" && typeof stored === "string"
+      return { ok, lines: [ok ? "✓ Settings were stored and read back through localStorage." : "✗ Save JSON under settings, read it back, parse it, and return theme." ] }
+    },
   },
   {
     id: "apisData",
@@ -1153,10 +1175,19 @@ const ROADMAP = [
     `,
     fnName: "projectPlan",
     starter:
-      "function projectPlan(project) {\n  // Return a first step for the chosen project.\n\n}",
-    task: 'Return <code>"Plan " + project</code>. Then open the Code Planner and break your chosen project into small tasks.',
-    testMode: "io",
-    tests: [[["a todo app"], "Plan a todo app"]],
+      "function projectPlan() {\n  // Return an object with add, remove, and list methods\n  // for a small todo list.\n\n}",
+    task: "Build a tiny todo-list module with three methods: add a task, remove a task, and list the remaining tasks.",
+    sourceRequirements: [{ test: (code) => /\badd\b/.test(code) && /\bremove\b/.test(code) && /\blist\b/.test(code), message: "Include add, remove, and list methods in the module." }],
+    testMode: "custom",
+    validate: async (fn) => {
+      const todos = fn()
+      let ok = false
+      try {
+        todos.add("Plan"); todos.add("Code"); todos.remove("Plan")
+        ok = typeof todos.add === "function" && typeof todos.remove === "function" && typeof todos.list === "function" && JSON.stringify(todos.list()) === JSON.stringify(["Code"])
+      } catch (error) { ok = false }
+      return { ok, lines: [ok ? "✓ Todo module adds, removes, and lists tasks." : "✗ Return a todo module with working add, remove, and list methods." ] }
+    },
   },
   {
     id: "modulesErrors",
@@ -1190,13 +1221,15 @@ const ROADMAP = [
     `,
     fnName: "getUserName",
     starter:
-      "function getUserName(user) {\n  // user is an object with a name property.\n  // Return the name.\n\n}",
-    task: "Read a property from an object—the basic operation behind most object-oriented code.",
-    testMode: "io",
-    tests: [
-      [[{ name: "Ada" }], "Ada"],
-      [[{ name: "Lin" }], "Lin"],
-    ],
+      "function getUserName(name) {\n  // Create a User class with a constructor and greet method.\n  // Return a new User instance.\n\n}",
+    task: "Create a class with a constructor that stores a name and a method that returns a greeting. Return an instance of that class.",
+    sourceRequirements: [{ test: (code) => /\bclass\s+\w+/.test(code) && /\bconstructor\s*\(/.test(code) && /\bgreet\s*\(/.test(code), message: "Define a class with a constructor and greet method." }],
+    testMode: "custom",
+    validate: async (fn) => {
+      let user, ok = false
+      try { user = fn("Ada"); ok = user && user.name === "Ada" && typeof user.greet === "function" && user.greet() === "Hello, Ada!" } catch (error) { ok = false }
+      return { ok, lines: [ok ? "✓ Class instance has constructor data and a working method." : "✗ Return a class instance with name and greet()." ] }
+    },
   },
   {
     id: "professionalPractice",
@@ -1210,13 +1243,13 @@ const ROADMAP = [
     `,
     fnName: "formatName",
     starter:
-      "function formatName(name) {\n  // Return the name with its first letter capitalized.\n\n}",
-    task: "Finish with a small, testable utility. Then choose a project and use the roadmap as your reference.",
-    testMode: "io",
-    tests: [
-      [["ada"], "Ada"],
-      [["javaScript"], "JavaScript"],
-    ],
+      "function formatName(name) {\n  // Return the name with its first letter capitalized.\n\n}\n\n// Add a console.assert test for formatName below.",
+    task: "Write the utility and a console.assert test that verifies formatName returns \"Ada\" for \"ada\".",
+    testMode: "custom",
+    validate: async (fn, source) => {
+      const ok = fn("ada") === "Ada" && /console\.assert\s*\(/.test(source)
+      return { ok, lines: [ok ? "✓ Utility works and includes an assertion-style test." : "✗ Write formatName and add a console.assert test for it." ] }
+    },
   },
 ]
 
@@ -2090,7 +2123,7 @@ async function runRoadmapCode() {
 
   if (lesson.testMode === "custom") {
     try {
-      const { ok, lines, consoleOutput } = await lesson.validate(fn)
+      const { ok, lines, consoleOutput } = await lesson.validate(fn, code)
       if (consoleOutput && consoleOutput.length) {
         printRoadmapLine("Console output:", "term-info")
         consoleOutput.forEach((line) =>

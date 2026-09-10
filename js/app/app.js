@@ -717,12 +717,15 @@ const ROADMAP = [
       <p>Learn the regular <code>function</code> form first. Then arrows become a shortcut, not a new mystery.</p>
     `,
     fnName: "triple",
+    standalone: true,
+    requiresArrow: true,
     starter:
-      "function triple(number) {\n  // Return number multiplied by 3.\n\n}",
-    solution: "function triple(number) {\n  return number * 3;\n}",
-    task: "Use the function syntax you already know to return <code>number * 3</code>. The example shows the arrow version you will see in real code.",
+      "const triple = (number) => {\n  // Return number multiplied by 3.\n\n};",
+    solution: "const triple = (number) => {\n  return number * 3;\n};",
+    task: "Create an arrow function named <code>triple</code> that returns <code>number * 3</code>.",
     hints: [
-      "Use return because this function must send a result back.",
+      "Start with: const triple = (number) => { ... };",
+      "Use return because this arrow function must send a result back.",
       "Multiply number by 3 with *.",
       "return number * 3;",
     ],
@@ -1304,7 +1307,7 @@ function loadRoadmapLesson(idx) {
       ${isDone ? '<div class="roadmap-complete-banner">✓ Mastered — practical examples are now unlocked below.</div>' : ""}
       ${isDone ? roadmapPracticalsMarkup(lesson.id) : ""}
       ${
-        roadmapFunctionWrapperHidden
+        roadmapFunctionWrapperHidden || lesson.standalone
           ? ""
           : `
         <div class="roadmap-code-toolbar">
@@ -1755,9 +1758,11 @@ async function runRoadmapCode() {
     await runActiveRoadmapPractical(visibleCode)
     return
   }
-  const code = isRoadmapFunctionWrapped(visibleCode, lesson)
+  const code = lesson.standalone
     ? visibleCode
-    : wrapRoadmapFunction(visibleCode, lesson)
+    : isRoadmapFunctionWrapped(visibleCode, lesson)
+      ? visibleCode
+      : wrapRoadmapFunction(visibleCode, lesson)
   const termEl = document.getElementById("roadmapTerminal")
   termEl.innerHTML = ""
 
@@ -1772,6 +1777,14 @@ async function runRoadmapCode() {
     if (Array.isArray(v)) return "[" + v.map(fmtRoadmapVal).join(", ") + "]"
     if (v && typeof v === "object") return JSON.stringify(v)
     return String(v)
+  }
+
+  if (lesson.requiresArrow && (!/=>/.test(code) || /\bfunction\b/.test(code))) {
+    printRoadmapLine(
+      "✗ This lesson requires an arrow function. Use => instead of function.",
+      "term-fail",
+    )
+    return
   }
 
   let fn

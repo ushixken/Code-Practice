@@ -169,7 +169,7 @@ window.ROADMAP_PRACTICALS = {
           message: "Use arrow function syntax instead of the function keyword.",
         },
         {
-          test: (code) => !/\bfunction\s*\(/.test(code) && !/\bfunction\s+\w+\s*\(/.test(code),
+          test: (code) => !/\bfunction\b/.test(code),
           message: "This practical asks for an arrow function, not a regular function.",
         },
       ],

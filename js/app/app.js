@@ -3052,5 +3052,8 @@ function openTopicStepperPilot() {
   renderTopicStepper(topicRoot, window.TOPIC_VARIABLES)
 }
 
+document.getElementById("test-stepper")?.addEventListener("click", () => {
+  location.hash = "#test-stepper"
+})
 window.addEventListener("hashchange", openTopicStepperPilot)
 openTopicStepperPilot()
